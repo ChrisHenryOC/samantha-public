@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scenario.schema.json",
+  "title": "Scenario",
+  "description": "A test scenario for evaluating LLM workflow routing.",
+  "type": "object",
+  "required": ["scenario_id", "category", "description", "events"],
+  "additionalProperties": false,
+  "properties": {
+    "scenario_id": {
+      "type": "string",
+      "pattern": "^SC-\\d{3}$",
+      "description": "Unique scenario identifier (SC-NNN)."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "accumulated_state",
+        "multi_rule",
+        "rule_coverage",
+        "unknown_input"
+      ],
+      "description": "Scenario category."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what this scenario tests."
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered sequence of workflow events with expected outputs.",
+      "items": {
+        "type": "object",
+        "required": ["step", "event_type", "event_data", "expected_output"],
+        "additionalProperties": false,
+        "properties": {
+          "step": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Sequential step number (1-based)."
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "embedding_complete",
+              "fish_decision",
+              "fish_result",
+              "grossing_complete",
+              "he_qc",
+              "he_staining_complete",
+              "ihc_qc",
+              "ihc_scoring",
+              "ihc_staining_complete",
+              "missing_info_received",
+              "order_received",
+              "pathologist_he_review",
+              "pathologist_signout",
+              "processing_complete",
+              "report_generated",
+              "sample_prep_qc",
+              "sectioning_complete"
+            ],
+            "description": "The type of workflow event."
+          },
+          "event_data": {
+            "type": "object",
+            "description": "Event-specific data payload."
+          },
+          "expected_output": {
+            "type": "object",
+            "required": ["next_state", "applied_rules", "flags"],
+            "additionalProperties": false,
+            "properties": {
+              "next_state": {
+                "type": "string",
+                "enum": [
+                  "ACCEPTED",
+                  "ACCESSIONING",
+                  "DO_NOT_PROCESS",
+                  "FISH_SEND_OUT",
+                  "HE_QC",
+                  "HE_STAINING",
+                  "IHC_QC",
+                  "IHC_SCORING",
+                  "IHC_STAINING",
+                  "MISSING_INFO_HOLD",
+                  "MISSING_INFO_PROCEED",
+                  "ORDER_COMPLETE",
+                  "ORDER_TERMINATED",
+                  "ORDER_TERMINATED_QNS",
+                  "PATHOLOGIST_HE_REVIEW",
+                  "PATHOLOGIST_SIGNOUT",
+                  "REPORT_GENERATION",
+                  "RESULTING",
+                  "RESULTING_HOLD",
+                  "SAMPLE_PREP_EMBEDDING",
+                  "SAMPLE_PREP_PROCESSING",
+                  "SAMPLE_PREP_QC",
+                  "SAMPLE_PREP_SECTIONING",
+                  "SUGGEST_FISH_REFLEX"
+                ],
+                "description": "Expected workflow state after this event."
+              },
+              "applied_rules": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^(ACC|SP|HE|IHC|RES)-\\d{3}$"
+                },
+                "description": "Rule IDs that should fire for this event."
+              },
+              "flags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "FISH_SUGGESTED",
+                    "FIXATION_WARNING",
+                    "HER2_FIXATION_REJECT",
+                    "MISSING_INFO_PROCEED",
+                    "RECUT_REQUESTED"
+                  ]
+                },
+                "description": "Flags that should be set/active after this event."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

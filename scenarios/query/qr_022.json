@@ -1,0 +1,107 @@
+{
+  "scenario_id": "QR-022",
+  "category": "query",
+  "tier": 4,
+  "description": "Prioritization — selecting top 3 signout cases by priority and age",
+  "database_state": {
+    "orders": [
+      {
+        "order_id": "ORD-2201",
+        "current_state": "PATHOLOGIST_SIGNOUT",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-13T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-2202",
+        "current_state": "PATHOLOGIST_SIGNOUT",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "rush",
+        "flags": [],
+        "created_at": "2025-01-14T10:00:00Z"
+      },
+      {
+        "order_id": "ORD-2203",
+        "current_state": "PATHOLOGIST_SIGNOUT",
+        "specimen_type": "resection",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-12T09:00:00Z"
+      },
+      {
+        "order_id": "ORD-2204",
+        "current_state": "PATHOLOGIST_SIGNOUT",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "rush",
+        "flags": [],
+        "created_at": "2025-01-14T14:00:00Z"
+      },
+      {
+        "order_id": "ORD-2205",
+        "current_state": "PATHOLOGIST_SIGNOUT",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-14T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-2206",
+        "current_state": "RESULTING",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "rush",
+        "flags": [],
+        "created_at": "2025-01-14T09:00:00Z"
+      },
+      {
+        "order_id": "ORD-2207",
+        "current_state": "IHC_SCORING",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-14T11:00:00Z"
+      },
+      {
+        "order_id": "ORD-2208",
+        "current_state": "ORDER_COMPLETE",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-11T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-2209",
+        "current_state": "ACCEPTED",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-15T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-2210",
+        "current_state": "HE_QC",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-14T16:00:00Z"
+      }
+    ],
+    "slides": []
+  },
+  "query": "I have time for 3 more signouts — which ones?",
+  "expected_output": {
+    "answer_type": "prioritized_list",
+    "order_ids": ["ORD-2202", "ORD-2204", "ORD-2203"],
+    "reasoning": "Five orders are in PATHOLOGIST_SIGNOUT state. Picking the top 3 by priority then age: ORD-2202 (rush, received Jan 14 10:00) and ORD-2204 (rush, received Jan 14 14:00) are the rush cases and should go first. Among the remaining routine cases, ORD-2203 (routine, received Jan 12 09:00) has been waiting the longest. The remaining two routine cases — ORD-2201 (Jan 13) and ORD-2205 (Jan 14) — can wait."
+  }
+}

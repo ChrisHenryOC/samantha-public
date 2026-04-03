@@ -1,0 +1,116 @@
+{
+  "scenario_id": "QR-026",
+  "category": "query",
+  "tier": 5,
+  "description": "Cross-order reasoning — identifying orders that appear stuck",
+  "database_state": {
+    "orders": [
+      {
+        "order_id": "ORD-2601",
+        "current_state": "MISSING_INFO_HOLD",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-10T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-2602",
+        "current_state": "ACCEPTED",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-15T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-2603",
+        "current_state": "RESULTING_HOLD",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": ["MISSING_INFO_PROCEED"],
+        "created_at": "2025-01-09T09:00:00Z"
+      },
+      {
+        "order_id": "ORD-2604",
+        "current_state": "SAMPLE_PREP_PROCESSING",
+        "specimen_type": "resection",
+        "anatomic_site": "breast",
+        "priority": "rush",
+        "flags": [],
+        "created_at": "2025-01-15T07:00:00Z"
+      },
+      {
+        "order_id": "ORD-2605",
+        "current_state": "FISH_SEND_OUT",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": ["FISH_SUGGESTED"],
+        "created_at": "2025-01-08T10:00:00Z"
+      },
+      {
+        "order_id": "ORD-2606",
+        "current_state": "HE_STAINING",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-14T14:00:00Z"
+      },
+      {
+        "order_id": "ORD-2607",
+        "current_state": "IHC_SCORING",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-14T10:00:00Z"
+      },
+      {
+        "order_id": "ORD-2608",
+        "current_state": "ORDER_COMPLETE",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-12T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-2609",
+        "current_state": "PATHOLOGIST_HE_REVIEW",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-14T09:00:00Z"
+      },
+      {
+        "order_id": "ORD-2610",
+        "current_state": "PATHOLOGIST_SIGNOUT",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "rush",
+        "flags": [],
+        "created_at": "2025-01-14T06:00:00Z"
+      },
+      {
+        "order_id": "ORD-2611",
+        "current_state": "SUGGEST_FISH_REFLEX",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": ["FISH_SUGGESTED"],
+        "created_at": "2025-01-10T14:00:00Z"
+      }
+    ],
+    "slides": []
+  },
+  "query": "Are there any orders that seem stuck or haven't progressed?",
+  "expected_output": {
+    "answer_type": "order_list",
+    "order_ids": ["ORD-2605", "ORD-2603", "ORD-2601"],
+    "reasoning": "Three orders appear stuck based on their age and hold/wait state. ORD-2605 (created Jan 8) has been in FISH_SEND_OUT for over a week — the external FISH result has not been received. ORD-2603 (created Jan 9) has been in RESULTING_HOLD for 6 days due to MISSING_INFO_PROCEED — billing info still hasn't arrived. ORD-2601 (created Jan 10) has been in MISSING_INFO_HOLD for 5 days — missing patient information has not been provided. ORD-2611 (SUGGEST_FISH_REFLEX, 5 days) is excluded because it is awaiting a pathologist decision, which is an active workflow step rather than a stalled hold."
+  }
+}

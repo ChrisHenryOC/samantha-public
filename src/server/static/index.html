@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Samantha — Lab Workflow Assistant</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" integrity="sha384-H+hy9ULve6xfxRkWIh/YOtvDdpXgV2fmAGQkIDTxIgZwNoaoBal14Di2YTMR6MzR" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.5/dist/purify.min.js" integrity="sha384-qSFej5dZNviyoPgYJ5+Xk4bEbX8AYddxAHPuzs1aSgRiXxJ3qmyWNaPsRkpv/+x5" crossorigin="anonymous"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; background: #f5f5f5; color: #333; }
+
+  /* Top bar */
+  .topbar { display: flex; align-items: center; gap: 16px; padding: 10px 20px; background: #1a1a2e; color: #fff; }
+  .topbar h1 { font-size: 18px; font-weight: 600; }
+  .topbar select { padding: 6px 10px; border-radius: 4px; border: 1px solid #555; background: #16213e; color: #fff; font-size: 14px; }
+  .topbar .health { display: flex; align-items: center; gap: 6px; margin-left: auto; font-size: 13px; }
+  .health-dot { width: 10px; height: 10px; border-radius: 50%; background: #888; }
+  .health-dot.ok { background: #4caf50; }
+  .health-dot.err { background: #f44336; }
+
+  /* Main layout */
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* Work queue panel */
+  .queue-panel { width: 400px; border-right: 1px solid #ddd; background: #fff; display: flex; flex-direction: column; }
+  .queue-header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+  .queue-header h2 { font-size: 15px; font-weight: 600; }
+  .queue-header button { padding: 4px 10px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; font-size: 12px; }
+  .queue-header button:hover { background: #f0f0f0; }
+  .queue-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .state-group { margin-bottom: 12px; }
+  .state-group h3 { font-size: 12px; color: #888; text-transform: uppercase; padding: 4px 8px; }
+  .order-card { padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: background 0.15s; }
+  .order-card:hover { background: #f8f8ff; }
+  .order-card.selected { background: #e8f0fe; border-color: #4285f4; }
+  .order-card .order-id { font-weight: 600; font-size: 14px; }
+  .order-card .patient { font-size: 13px; color: #555; }
+  .order-card .meta { display: flex; gap: 8px; margin-top: 4px; font-size: 12px; }
+  .badge { padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: 500; }
+  .badge.rush { background: #ffebee; color: #c62828; }
+  .badge.routine { background: #e8f5e9; color: #2e7d32; }
+  .badge.flag { background: #fff3e0; color: #e65100; }
+
+  /* Order detail */
+  .order-detail { padding: 16px; border-top: 1px solid #eee; max-height: 250px; overflow-y: auto; font-size: 13px; background: #fafafa; }
+  .order-detail h3 { font-size: 14px; margin-bottom: 8px; }
+  .detail-row { display: flex; gap: 8px; margin-bottom: 4px; }
+  .detail-label { font-weight: 600; min-width: 120px; color: #666; }
+  .event-list { margin-top: 8px; }
+  .event-item { padding: 4px 0; border-bottom: 1px solid #eee; font-size: 12px; }
+
+  /* Chat panel */
+  .chat-panel { flex: 1; display: flex; flex-direction: column; background: #fff; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 16px; }
+  .msg { margin-bottom: 12px; max-width: 85%; }
+  .msg.user { margin-left: auto; }
+  .msg.assistant { margin-right: auto; }
+  .msg .bubble { padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+  .msg.user .bubble { background: #4285f4; color: #fff; border-bottom-right-radius: 4px; white-space: pre-wrap; }
+  .msg.assistant .bubble { background: #f1f3f4; color: #333; border-bottom-left-radius: 4px; }
+  .msg.assistant .bubble.streaming { white-space: pre-wrap; }
+  .msg.error .bubble { background: #ffebee; color: #c62828; white-space: pre-wrap; }
+
+  /* Markdown styles in assistant bubbles */
+  .msg.assistant .bubble h1, .msg.assistant .bubble h2, .msg.assistant .bubble h3 { margin: 8px 0 4px; font-size: 15px; font-weight: 600; }
+  .msg.assistant .bubble h1 { font-size: 17px; }
+  .msg.assistant .bubble h2 { font-size: 16px; }
+  .msg.assistant .bubble p { margin: 4px 0; }
+  .msg.assistant .bubble ul, .msg.assistant .bubble ol { margin: 4px 0; padding-left: 20px; }
+  .msg.assistant .bubble li { margin: 2px 0; }
+  .msg.assistant .bubble strong { font-weight: 600; }
+  .msg.assistant .bubble code { background: #e0e0e0; padding: 1px 4px; border-radius: 3px; font-size: 13px; }
+  .msg.assistant .bubble pre { background: #e0e0e0; padding: 8px; border-radius: 4px; overflow-x: auto; margin: 4px 0; }
+  .msg.assistant .bubble pre code { background: none; padding: 0; }
+  .msg.assistant .bubble table { border-collapse: collapse; margin: 4px 0; font-size: 13px; }
+  .msg.assistant .bubble th, .msg.assistant .bubble td { border: 1px solid #ccc; padding: 4px 8px; }
+  .msg.assistant .bubble th { background: #e8e8e8; font-weight: 600; }
+  .msg.assistant .bubble hr { border: none; border-top: 1px solid #ccc; margin: 8px 0; }
+  .tool-indicator { font-size: 12px; color: #888; padding: 4px 0; font-style: italic; }
+  .typing-indicator { font-size: 13px; color: #888; padding: 8px 0; }
+
+  /* Chat input */
+  .chat-input { display: flex; padding: 12px 16px; border-top: 1px solid #eee; gap: 8px; }
+  .chat-input input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+  .chat-input input:focus { border-color: #4285f4; }
+  .chat-input button { padding: 10px 20px; background: #4285f4; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
+  .chat-input button:hover { background: #3367d6; }
+  .chat-input button:disabled { background: #ccc; cursor: not-allowed; }
+
+  .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px solid #eee; font-size: 14px; font-weight: 600; color: #555; }
+  .chat-header button { padding: 4px 10px; border: 1px solid #ccc; border-radius: 4px; background: #fff; cursor: pointer; font-size: 12px; font-weight: 400; }
+  .chat-header button:hover { background: #f0f0f0; }
+  .chat-header button.copied { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+
+  .empty-state { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Samantha</h1>
+  <label for="role-select" style="font-size:13px;">Role:</label>
+  <select id="role-select">
+    <option value="accessioner">Accessioner</option>
+    <option value="histotech">Histotech</option>
+    <option value="pathologist">Pathologist</option>
+    <option value="lab_manager" selected>Lab Manager</option>
+  </select>
+  <div class="health">
+    <div class="health-dot" id="health-dot"></div>
+    <span id="health-text">Checking...</span>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Work Queue -->
+  <div class="queue-panel">
+    <div class="queue-header">
+      <h2>Work Queue</h2>
+      <button onclick="loadOrders()">Refresh</button>
+    </div>
+    <div class="queue-list" id="queue-list">
+      <div class="empty-state">Loading orders...</div>
+    </div>
+    <div class="order-detail" id="order-detail" style="display:none;"></div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <span>Chat</span>
+      <button id="copy-transcript-btn" onclick="copyTranscript()">Copy Transcript</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="empty-state">Start a conversation by typing a message below.</div>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chat-input" placeholder="Ask about orders, workflow, or submit events..." autocomplete="off">
+      <button id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Utility ---
+function escapeHtml(text) {
+  if (text == null) return '';
+  const div = document.createElement('div');
+  div.textContent = String(text);
+  return div.innerHTML;
+}
+
+function esc(text) { return escapeHtml(text); }
+
+// --- State ---
+let ws = null;
+let selectedOrderId = null;
+let isStreaming = false;
+let intentionalClose = false;
+let reconnectDelay = 1000;
+let reconnectTimer = null;
+
+// --- Health check ---
+async function checkHealth() {
+  const dot = document.getElementById('health-dot');
+  const text = document.getElementById('health-text');
+  try {
+    const resp = await fetch('/health');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    if (data.provider_status === 'connected') {
+      dot.className = 'health-dot ok';
+      text.textContent = data.model + ' ready';
+    } else {
+      dot.className = 'health-dot err';
+      const provider = data.provider || 'Model';
+      text.textContent = provider + ' unreachable';
+    }
+  } catch {
+    dot.className = 'health-dot err';
+    text.textContent = 'Server error';
+  }
+}
+
+// --- Orders ---
+async function loadOrders() {
+  const role = document.getElementById('role-select').value;
+  const list = document.getElementById('queue-list');
+  try {
+    const resp = await fetch(`/api/orders?role=${encodeURIComponent(role)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const orders = await resp.json();
+    if (orders.length === 0) {
+      list.innerHTML = '<div class="empty-state">No orders for this role.</div>';
+      return;
+    }
+    // Group by state
+    const groups = {};
+    for (const o of orders) {
+      if (!groups[o.current_state]) groups[o.current_state] = [];
+      groups[o.current_state].push(o);
+    }
+    let html = '';
+    for (const [state, stateOrders] of Object.entries(groups)) {
+      html += `<div class="state-group"><h3>${esc(state)} (${stateOrders.length})</h3>`;
+      for (const o of stateOrders) {
+        const flags = o.flags.length > 0
+          ? o.flags.map(f => `<span class="badge flag">${esc(f)}</span>`).join(' ')
+          : '';
+        const sel = o.order_id === selectedOrderId ? ' selected' : '';
+        html += `<div class="order-card${sel}" data-order-id="${esc(o.order_id)}">
+          <div class="order-id">${esc(o.order_id)}</div>
+          <div class="patient">${esc(o.patient_name || 'Unknown')}</div>
+          <div class="meta">
+            <span class="badge ${esc(o.priority)}">${esc(o.priority)}</span>
+            ${flags}
+          </div>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    list.innerHTML = html;
+    // Event delegation for order cards
+    list.querySelectorAll('.order-card').forEach(card => {
+      card.addEventListener('click', () => {
+        selectOrder(card.dataset.orderId);
+      });
+    });
+  } catch {
+    list.innerHTML = '<div class="empty-state">Failed to load orders.</div>';
+  }
+}
+
+async function selectOrder(orderId) {
+  selectedOrderId = orderId;
+  // Update selection highlight without full reload
+  document.querySelectorAll('.order-card').forEach(card => {
+    card.classList.toggle('selected', card.dataset.orderId === orderId);
+  });
+  const detail = document.getElementById('order-detail');
+  try {
+    const [orderResp, eventsResp, slidesResp] = await Promise.all([
+      fetch(`/api/orders/${encodeURIComponent(orderId)}`),
+      fetch(`/api/orders/${encodeURIComponent(orderId)}/events`),
+      fetch(`/api/orders/${encodeURIComponent(orderId)}/slides`),
+    ]);
+    if (!orderResp.ok) throw new Error(`Order: HTTP ${orderResp.status}`);
+    if (!eventsResp.ok) throw new Error(`Events: HTTP ${eventsResp.status}`);
+    if (!slidesResp.ok) throw new Error(`Slides: HTTP ${slidesResp.status}`);
+    const order = await orderResp.json();
+    const events = await eventsResp.json();
+    const slides = await slidesResp.json();
+
+    let html = `<h3>${esc(order.order_id)} Detail</h3>`;
+    html += `<div class="detail-row"><span class="detail-label">Patient:</span><span>${esc(order.patient_name)}, ${esc(order.patient_age)}${order.patient_sex ? ' ' + esc(order.patient_sex) : ''}</span></div>`;
+    html += `<div class="detail-row"><span class="detail-label">Specimen:</span><span>${esc(order.specimen_type)}</span></div>`;
+    html += `<div class="detail-row"><span class="detail-label">Site:</span><span>${esc(order.anatomic_site)}</span></div>`;
+    html += `<div class="detail-row"><span class="detail-label">Fixative:</span><span>${esc(order.fixative)} (${esc(order.fixation_time_hours || '?')}h)</span></div>`;
+    html += `<div class="detail-row"><span class="detail-label">Tests:</span><span>${esc(order.ordered_tests.join(', '))}</span></div>`;
+    html += `<div class="detail-row"><span class="detail-label">State:</span><span>${esc(order.current_state)}</span></div>`;
+
+    if (slides.length > 0) {
+      html += `<div class="detail-row"><span class="detail-label">Slides:</span><span>${slides.length} (${esc(slides.map(s => s.test_assignment + ':' + s.status).join(', '))})</span></div>`;
+    }
+
+    if (events.length > 0) {
+      html += '<div class="event-list"><strong>Events:</strong>';
+      for (const e of events) {
+        html += `<div class="event-item">${esc(e.step_number)}. ${esc(e.event_type)}</div>`;
+      }
+      html += '</div>';
+    }
+
+    detail.innerHTML = html;
+    detail.style.display = 'block';
+  } catch {
+    detail.innerHTML = '<div class="empty-state">Failed to load order detail.</div>';
+    detail.style.display = 'block';
+  }
+}
+
+// --- Chat ---
+function connectWebSocket() {
+  // Cancel pending reconnect timer
+  if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+
+  // Close existing connection intentionally (suppress onclose reconnect)
+  if (ws) {
+    intentionalClose = true;
+    ws.close();
+    ws = null;
+  }
+
+  const role = document.getElementById('role-select').value;
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}/ws/chat?role=${encodeURIComponent(role)}`);
+
+  ws.onopen = () => {
+    console.log('Chat connected, role:', role);
+    reconnectDelay = 1000; // Reset backoff on successful connect
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      handleChatEvent(data);
+    } catch (err) {
+      console.error('Failed to parse WebSocket message:', err);
+      enableChatInput();
+    }
+  };
+
+  ws.onclose = () => {
+    console.log('Chat disconnected');
+    if (intentionalClose) {
+      intentionalClose = false;
+      return;
+    }
+    // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
+    reconnectTimer = setTimeout(connectWebSocket, reconnectDelay);
+    reconnectDelay = Math.min(reconnectDelay * 2, 30000);
+  };
+
+  ws.onerror = () => {
+    console.error('WebSocket error');
+  };
+}
+
+function enableChatInput() {
+  isStreaming = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('chat-input').disabled = false;
+}
+
+function handleChatEvent(data) {
+  const messages = document.getElementById('chat-messages');
+
+  if (data.type === 'token') {
+    let bubble = document.getElementById('streaming-bubble');
+    if (!bubble) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg assistant';
+      msgDiv.innerHTML = '<div class="bubble streaming" id="streaming-bubble"></div>';
+      messages.appendChild(msgDiv);
+      bubble = document.getElementById('streaming-bubble');
+      isStreaming = true;
+    }
+    bubble.textContent += data.content;
+    messages.scrollTop = messages.scrollHeight;
+  }
+  else if (data.type === 'tool_status') {
+    let indicator = document.getElementById('tool-indicator');
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.id = 'tool-indicator';
+      indicator.className = 'tool-indicator';
+      messages.appendChild(indicator);
+    }
+    if (data.status === 'executing') {
+      indicator.textContent = `Querying ${data.tool}...`;
+    } else {
+      indicator.textContent = '';
+    }
+    messages.scrollTop = messages.scrollHeight;
+  }
+  else if (data.type === 'done') {
+    const bubble = document.getElementById('streaming-bubble');
+    if (bubble) {
+      const rawText = bubble.textContent;
+      try {
+        bubble.innerHTML = DOMPurify.sanitize(marked.parse(rawText));
+      } catch {
+        // CDN failed to load — fall back to plain text
+        bubble.textContent = rawText;
+      }
+      bubble.classList.remove('streaming');
+      bubble.removeAttribute('id');
+    }
+    const indicator = document.getElementById('tool-indicator');
+    if (indicator) indicator.remove();
+    enableChatInput();
+    loadOrders();
+  }
+  else if (data.type === 'error') {
+    const bubble = document.getElementById('streaming-bubble');
+    if (bubble) bubble.removeAttribute('id');
+    const indicator = document.getElementById('tool-indicator');
+    if (indicator) indicator.remove();
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg error';
+    const errorBubble = document.createElement('div');
+    errorBubble.className = 'bubble';
+    errorBubble.textContent = data.message;
+    msgDiv.appendChild(errorBubble);
+    messages.appendChild(msgDiv);
+    enableChatInput();
+    messages.scrollTop = messages.scrollHeight;
+  }
+}
+
+function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    const messages = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg error';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = 'Chat is reconnecting. Please try again in a moment.';
+    msgDiv.appendChild(bubble);
+    messages.appendChild(msgDiv);
+    messages.scrollTop = messages.scrollHeight;
+    return;
+  }
+
+  const messages = document.getElementById('chat-messages');
+  if (messages.querySelector('.empty-state')) messages.innerHTML = '';
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'msg user';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = msg;
+  msgDiv.appendChild(bubble);
+  messages.appendChild(msgDiv);
+  messages.scrollTop = messages.scrollHeight;
+
+  ws.send(JSON.stringify({ message: msg }));
+  input.value = '';
+  document.getElementById('send-btn').disabled = true;
+  document.getElementById('chat-input').disabled = true;
+}
+
+// --- Copy transcript ---
+function copyTranscript() {
+  const messages = document.getElementById('chat-messages');
+  const lines = [];
+  for (const msgDiv of messages.querySelectorAll('.msg')) {
+    const isUser = msgDiv.classList.contains('user');
+    const isError = msgDiv.classList.contains('error');
+    const bubble = msgDiv.querySelector('.bubble');
+    if (!bubble) continue;
+    const text = bubble.textContent.trim();
+    if (isUser) {
+      lines.push(`USER: ${text}`);
+    } else if (isError) {
+      lines.push(`ERROR: ${text}`);
+    } else {
+      lines.push(`ASSISTANT: ${text}`);
+    }
+  }
+  if (!lines.length) return;
+  const roleSelect = document.getElementById('role-select');
+  const roleName = roleSelect.options[roleSelect.selectedIndex].text;
+  const transcript = `ROLE: ${roleName}\n\n` + lines.join('\n\n');
+  const btn = document.getElementById('copy-transcript-btn');
+  function flashBtn(label) {
+    btn.textContent = label;
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Transcript'; btn.classList.remove('copied'); }, 2000);
+  }
+  navigator.clipboard.writeText(transcript).then(() => flashBtn('Copied!')).catch(() => flashBtn('Copy failed'));
+}
+
+// --- Event listeners ---
+document.getElementById('chat-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+document.getElementById('role-select').addEventListener('change', () => {
+  selectedOrderId = null;
+  document.getElementById('order-detail').style.display = 'none';
+  document.getElementById('chat-messages').innerHTML = '<div class="empty-state">Start a conversation by typing a message below.</div>';
+  loadOrders();
+  connectWebSocket();
+});
+
+// --- SSE for real-time updates ---
+function connectSSE() {
+  const sse = new EventSource('/sse/updates');
+  sse.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'routing_decision') {
+        loadOrders(); // Refresh work queue on state change
+      }
+    } catch { /* ignore parse errors on SSE */ }
+  };
+  sse.onerror = () => {
+    console.log('SSE connection lost, will auto-reconnect');
+  };
+}
+
+// --- Init ---
+checkHealth();
+setInterval(checkHealth, 30000);
+loadOrders();
+connectWebSocket();
+connectSSE();
+</script>
+</body>
+</html>

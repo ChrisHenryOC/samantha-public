@@ -1,0 +1,687 @@
+# Breast Cancer Laboratory Workflow State Machine
+# Source of truth for states, transitions, rules, and flags.
+# The Python state machine (src/workflow/) loads and validates against this file.
+
+# ---------------------------------------------------------------------------
+# States
+# ---------------------------------------------------------------------------
+states:
+  # Accessioning
+  - id: ACCESSIONING
+    phase: accessioning
+    description: Order arrives; all validation rules evaluated simultaneously
+    terminal: false
+
+  - id: ACCEPTED
+    phase: accessioning
+    description: All validations pass; order is ready for grossing
+    terminal: false
+
+  - id: MISSING_INFO_HOLD
+    phase: accessioning
+    description: Critical info missing (patient name, sex, or fixation time); order held until resolved
+    terminal: false
+
+  - id: MISSING_INFO_PROCEED
+    phase: accessioning
+    description: Non-critical info missing (billing); order proceeds with flag
+    terminal: false
+
+  - id: DO_NOT_PROCESS
+    phase: accessioning
+    description: Order rejected (invalid site, specimen, or fixation)
+    terminal: false
+
+  # Sample Prep
+  - id: SAMPLE_PREP_PROCESSING
+    phase: sample_prep
+    description: Tissue processing (dehydration, clearing, infiltration)
+    terminal: false
+
+  - id: SAMPLE_PREP_EMBEDDING
+    phase: sample_prep
+    description: Paraffin embedding
+    terminal: false
+
+  - id: SAMPLE_PREP_SECTIONING
+    phase: sample_prep
+    description: Microtomy — cutting thin sections from paraffin block
+    terminal: false
+
+  - id: SAMPLE_PREP_QC
+    phase: sample_prep
+    description: "QC checks: section thickness, tissue integrity, mounting quality"
+    terminal: false
+
+  # H&E Staining and Review
+  - id: HE_STAINING
+    phase: he_review
+    description: Hematoxylin and eosin staining
+    terminal: false
+
+  - id: HE_QC
+    phase: he_review
+    description: "H&E QC checks: stain quality, uniformity, artifact assessment"
+    terminal: false
+
+  - id: PATHOLOGIST_HE_REVIEW
+    phase: he_review
+    description: Pathologist reviews H&E slides and determines diagnosis/IHC panel
+    terminal: false
+
+  # IHC
+  - id: IHC_STAINING
+    phase: ihc
+    description: Immunohistochemistry staining (per-slide, per-marker)
+    terminal: false
+
+  - id: IHC_QC
+    phase: ihc
+    description: IHC stain quality and controls check (per-slide pass/fail)
+    terminal: false
+
+  - id: IHC_SCORING
+    phase: ihc
+    description: "Quantitative scoring: HER2 (0/1+/2+/3+), ER/PR (%), Ki-67 (%)"
+    terminal: false
+
+  - id: SUGGEST_FISH_REFLEX
+    phase: ihc
+    description: HER2 equivocal; FISH reflex suggested pending pathologist approval
+    terminal: false
+
+  - id: FISH_SEND_OUT
+    phase: ihc
+    description: Specimen sent to external lab for FISH testing
+    terminal: false
+
+  # Resulting
+  - id: RESULTING
+    phase: resulting
+    description: All testing complete, no blocking flags; ready for signout
+    terminal: false
+
+  - id: RESULTING_HOLD
+    phase: resulting
+    description: Blocked by MISSING_INFO_PROCEED flag; held until info received
+    terminal: false
+
+  - id: PATHOLOGIST_SIGNOUT
+    phase: resulting
+    description: Pathologist reviews and signs out the case, selecting reportable tests
+    terminal: false
+
+  - id: REPORT_GENERATION
+    phase: resulting
+    description: Final report generated with pathologist-selected tests
+    terminal: false
+
+  # Terminal states
+  - id: ORDER_COMPLETE
+    phase: terminal
+    description: Normal completion — report generated and released
+    terminal: true
+
+  - id: ORDER_TERMINATED
+    phase: terminal
+    description: Order rejected at accessioning (DO_NOT_PROCESS)
+    terminal: true
+
+  - id: ORDER_TERMINATED_QNS
+    phase: terminal
+    description: Quantity not sufficient — insufficient tissue at any step
+    terminal: true
+
+# ---------------------------------------------------------------------------
+# Transitions
+# ---------------------------------------------------------------------------
+transitions:
+  # Accessioning outcomes
+  - from: ACCESSIONING
+    to: ACCEPTED
+    condition: All validations pass (ACC-008)
+
+  - from: ACCESSIONING
+    to: MISSING_INFO_HOLD
+    condition: Critical info missing — patient name (ACC-001) or sex (ACC-002)
+
+  - from: ACCESSIONING
+    to: MISSING_INFO_PROCEED
+    condition: Only non-critical info missing — billing (ACC-007)
+
+  - from: ACCESSIONING
+    to: DO_NOT_PROCESS
+    condition: Invalid site (ACC-003), specimen type (ACC-004), or HER2 fixation (ACC-005, ACC-006)
+
+  - from: MISSING_INFO_HOLD
+    to: ACCESSIONING
+    condition: Missing info received; re-evaluate all accessioning rules
+
+  - from: ACCEPTED
+    to: SAMPLE_PREP_PROCESSING
+    condition: Grossing completed successfully (SP-001)
+
+  - from: MISSING_INFO_PROCEED
+    to: SAMPLE_PREP_PROCESSING
+    condition: Grossing completed successfully (SP-001)
+
+  - from: DO_NOT_PROCESS
+    to: ORDER_TERMINATED
+    condition: Order rejected at accessioning
+
+  # Sample prep linear progression
+  - from: SAMPLE_PREP_PROCESSING
+    to: SAMPLE_PREP_EMBEDDING
+    condition: Processing completed successfully (SP-001)
+
+  - from: SAMPLE_PREP_EMBEDDING
+    to: SAMPLE_PREP_SECTIONING
+    condition: Embedding completed successfully (SP-001)
+
+  - from: SAMPLE_PREP_SECTIONING
+    to: SAMPLE_PREP_QC
+    condition: Sectioning completed successfully (SP-001)
+
+  # Sample prep QC outcomes
+  - from: SAMPLE_PREP_QC
+    to: HE_STAINING
+    condition: QC passes (SP-004)
+
+  - from: SAMPLE_PREP_QC
+    to: SAMPLE_PREP_SECTIONING
+    condition: QC fails, tissue available for retry (SP-005)
+
+  - from: SAMPLE_PREP_QC
+    to: ORDER_TERMINATED_QNS
+    condition: QC fails, insufficient tissue (SP-006)
+
+  # Sample prep retry at current step (self-loops)
+  - from: SAMPLE_PREP_PROCESSING
+    to: SAMPLE_PREP_PROCESSING
+    condition: Step failed, tissue available for retry (SP-002)
+
+  - from: SAMPLE_PREP_EMBEDDING
+    to: SAMPLE_PREP_EMBEDDING
+    condition: Step failed, tissue available for retry (SP-002)
+
+  - from: SAMPLE_PREP_SECTIONING
+    to: SAMPLE_PREP_SECTIONING
+    condition: Step failed, tissue available for retry (SP-002)
+
+  # Sample prep failure at any step
+  - from: SAMPLE_PREP_PROCESSING
+    to: ORDER_TERMINATED_QNS
+    condition: Step failed, insufficient tissue (SP-003)
+
+  - from: SAMPLE_PREP_EMBEDDING
+    to: ORDER_TERMINATED_QNS
+    condition: Step failed, insufficient tissue (SP-003)
+
+  - from: SAMPLE_PREP_SECTIONING
+    to: ORDER_TERMINATED_QNS
+    condition: Step failed, insufficient tissue (SP-003)
+
+  # H&E staining and QC
+  - from: HE_STAINING
+    to: HE_QC
+    condition: H&E staining completed
+
+  - from: HE_QC
+    to: PATHOLOGIST_HE_REVIEW
+    condition: H&E QC passes (HE-001)
+
+  - from: HE_QC
+    to: HE_STAINING
+    condition: H&E QC fails, restain possible (HE-002)
+
+  - from: HE_QC
+    to: SAMPLE_PREP_SECTIONING
+    condition: H&E QC fails, recut needed, tissue available (HE-003)
+
+  - from: HE_QC
+    to: ORDER_TERMINATED_QNS
+    condition: H&E QC fails, insufficient tissue (HE-004)
+
+  # Pathologist H&E review outcomes
+  - from: PATHOLOGIST_HE_REVIEW
+    to: IHC_STAINING
+    condition: "Diagnosis: invasive carcinoma (HE-005), DCIS (HE-006), or suspicious/atypical (HE-007)"
+
+  - from: PATHOLOGIST_HE_REVIEW
+    to: RESULTING
+    condition: "Diagnosis: benign — cancel IHC (HE-008)"
+
+  - from: PATHOLOGIST_HE_REVIEW
+    to: SAMPLE_PREP_SECTIONING
+    condition: Pathologist requests recuts (HE-009)
+
+  # IHC fixation check
+  - from: IHC_STAINING
+    to: IHC_STAINING
+    condition: HER2 fixation out of tolerance — reject HER2, continue remaining markers (IHC-001)
+
+  # IHC staining and QC
+  - from: IHC_STAINING
+    to: IHC_QC
+    condition: IHC staining completed
+
+  - from: IHC_QC
+    to: IHC_SCORING
+    condition: All slides stained and QC passed (IHC-002)
+
+  - from: IHC_QC
+    to: IHC_QC
+    condition: Some slides still pending, wait for remaining slides (IHC-003)
+
+  - from: IHC_QC
+    to: IHC_STAINING
+    condition: Staining failed, retry (IHC-004)
+
+  - from: IHC_QC
+    to: ORDER_TERMINATED_QNS
+    condition: Staining failed, insufficient tissue (IHC-005)
+
+  # IHC scoring outcomes
+  - from: IHC_SCORING
+    to: RESULTING
+    condition: Scoring complete, no equivocal results (IHC-006)
+
+  - from: IHC_SCORING
+    to: SUGGEST_FISH_REFLEX
+    condition: HER2 equivocal (IHC-007)
+
+  # FISH pathway
+  - from: SUGGEST_FISH_REFLEX
+    to: FISH_SEND_OUT
+    condition: Pathologist approves FISH reflex (IHC-008)
+
+  - from: SUGGEST_FISH_REFLEX
+    to: RESULTING
+    condition: Pathologist declines FISH reflex (IHC-009)
+
+  - from: FISH_SEND_OUT
+    to: RESULTING
+    condition: FISH result received, proceed to resulting (IHC-010)
+
+  - from: FISH_SEND_OUT
+    to: ORDER_TERMINATED_QNS
+    condition: External lab returns QNS (IHC-011)
+
+  # Resulting
+  - from: RESULTING
+    to: RESULTING_HOLD
+    condition: MISSING_INFO_PROCEED flag present (RES-001)
+
+  - from: RESULTING_HOLD
+    to: RESULTING
+    condition: Info received and flag cleared (RES-002)
+
+  - from: RESULTING_HOLD
+    to: RESULTING_HOLD
+    condition: Info received but flag still unresolved (RES-002, still missing branch)
+
+  - from: RESULTING
+    to: PATHOLOGIST_SIGNOUT
+    condition: All testing complete, no blocking flags (RES-003)
+
+  - from: PATHOLOGIST_SIGNOUT
+    to: REPORT_GENERATION
+    condition: Pathologist selects reportable tests (RES-004)
+
+  - from: REPORT_GENERATION
+    to: ORDER_COMPLETE
+    condition: Report generated (RES-005)
+
+# ---------------------------------------------------------------------------
+# Rules
+# ---------------------------------------------------------------------------
+rules:
+  # --- Accessioning (severity-based, all-match evaluation) ---
+  - rule_id: ACC-001
+    step: ACCESSIONING
+    trigger: Patient name missing
+    action: MISSING_INFO_HOLD — hold order, request patient name
+    severity: HOLD
+    source: Accessioning SOP, Section 3.1
+
+  - rule_id: ACC-002
+    step: ACCESSIONING
+    trigger: Patient sex missing
+    action: MISSING_INFO_HOLD — hold order, request patient sex
+    severity: HOLD
+    source: Accessioning SOP, Section 3.1
+
+  - rule_id: ACC-003
+    step: ACCESSIONING
+    trigger: Anatomic site not breast-cancer-relevant
+    action: DO_NOT_PROCESS
+    severity: REJECT
+    source: Accessioning SOP, Section 3.2
+
+  - rule_id: ACC-004
+    step: ACCESSIONING
+    trigger: Specimen type incompatible with histology workflow (e.g., FNA) or unrecognized
+    action: DO_NOT_PROCESS
+    severity: REJECT
+    source: Accessioning SOP, Section 3.2
+
+  - rule_id: ACC-005
+    step: ACCESSIONING
+    trigger: HER2 ordered and fixative is not formalin
+    action: DO_NOT_PROCESS
+    severity: REJECT
+    source: Accessioning SOP, Section 3.3
+
+  - rule_id: ACC-006
+    step: ACCESSIONING
+    trigger: HER2 ordered and fixation time outside 6-72 hours
+    action: DO_NOT_PROCESS
+    severity: REJECT
+    source: Accessioning SOP, Section 3.3
+
+  - rule_id: ACC-007
+    step: ACCESSIONING
+    trigger: Billing info missing
+    action: MISSING_INFO_PROCEED — proceed with flag
+    severity: PROCEED
+    source: Accessioning SOP, Section 3.1
+
+  - rule_id: ACC-009
+    step: ACCESSIONING
+    trigger: HER2 ordered and fixation time is null (missing)
+    action: MISSING_INFO_HOLD — hold order, request fixation time
+    severity: HOLD
+    source: Accessioning SOP, Section 3.3
+
+  - rule_id: ACC-008
+    step: ACCESSIONING
+    trigger: All validations pass
+    action: ACCEPTED
+    severity: ACCEPT
+    source: Accessioning SOP, Section 3.4
+
+  # --- Sample Prep (priority-based, first-match evaluation) ---
+  - rule_id: SP-001
+    step: SAMPLE_PREP
+    trigger: Step completed successfully
+    action: Advance to next sample prep step
+    priority: 1
+    source: Sample Prep SOP, Section 2.1
+
+  - rule_id: SP-002
+    step: SAMPLE_PREP
+    trigger: Step failed, tissue available
+    action: RETRY current step
+    priority: 2
+    source: Sample Prep SOP, Section 2.2
+
+  - rule_id: SP-003
+    step: SAMPLE_PREP
+    trigger: Step failed, insufficient tissue
+    action: ABORT — ORDER_TERMINATED_QNS
+    priority: 3
+    source: Sample Prep SOP, Section 2.3
+
+  - rule_id: SP-004
+    step: SAMPLE_PREP
+    trigger: Sample prep QC passes
+    action: Advance to HE_STAINING
+    priority: 4
+    source: Sample Prep SOP, Section 3.1
+
+  - rule_id: SP-005
+    step: SAMPLE_PREP
+    trigger: Sample prep QC fails, tissue available
+    action: RETRY — back to SAMPLE_PREP_SECTIONING
+    priority: 5
+    source: Sample Prep SOP, Section 3.2
+
+  - rule_id: SP-006
+    step: SAMPLE_PREP
+    trigger: Sample prep QC fails, insufficient tissue
+    action: ABORT — ORDER_TERMINATED_QNS
+    priority: 6
+    source: Sample Prep SOP, Section 3.3
+
+  # --- H&E QC (priority-based, first-match evaluation) ---
+  - rule_id: HE-001
+    step: HE_QC
+    trigger: H&E QC passes
+    action: Route to PATHOLOGIST_HE_REVIEW
+    priority: 1
+    source: H&E Staining SOP, Section 4.1
+
+  - rule_id: HE-002
+    step: HE_QC
+    trigger: H&E QC fails, restain possible
+    action: RETRY — back to HE_STAINING
+    priority: 2
+    source: H&E Staining SOP, Section 4.2
+
+  - rule_id: HE-003
+    step: HE_QC
+    trigger: H&E QC fails, recut needed, tissue available
+    action: RETRY — back to SAMPLE_PREP_SECTIONING
+    priority: 3
+    source: H&E Staining SOP, Section 4.3
+
+  - rule_id: HE-004
+    step: HE_QC
+    trigger: H&E QC fails, insufficient tissue
+    action: ABORT — ORDER_TERMINATED_QNS
+    priority: 4
+    source: H&E Staining SOP, Section 4.4
+
+  # --- Pathologist H&E Review (priority-based, first-match evaluation) ---
+  - rule_id: HE-005
+    step: PATHOLOGIST_HE_REVIEW
+    trigger: "Pathologist diagnosis: invasive carcinoma"
+    action: "PROCEED_IHC — standard panel: ER, PR, HER2, Ki-67"
+    priority: 1
+    source: Pathologist Review SOP, Section 5.1
+
+  - rule_id: HE-006
+    step: PATHOLOGIST_HE_REVIEW
+    trigger: "Pathologist diagnosis: DCIS"
+    action: "PROCEED_IHC — standard panel: ER, PR; HER2 only if ordered"
+    priority: 2
+    source: Pathologist Review SOP, Section 5.2
+
+  - rule_id: HE-007
+    step: PATHOLOGIST_HE_REVIEW
+    trigger: "Pathologist diagnosis: suspicious/atypical"
+    action: PROCEED_IHC — pathologist-customized panel
+    priority: 3
+    source: Pathologist Review SOP, Section 5.3
+
+  - rule_id: HE-008
+    step: PATHOLOGIST_HE_REVIEW
+    trigger: "Pathologist diagnosis: benign"
+    action: CANCEL_IHC_BENIGN — route to RESULTING
+    priority: 4
+    source: Pathologist Review SOP, Section 5.4
+
+  - rule_id: HE-009
+    step: PATHOLOGIST_HE_REVIEW
+    trigger: Pathologist requests recuts
+    action: REQUEST_RECUTS — back to SAMPLE_PREP_SECTIONING
+    priority: 5
+    source: Pathologist Review SOP, Section 5.5
+
+  # --- IHC (priority-based, first-match evaluation) ---
+  # applies_at specifies the state(s) where each rule is evaluated.
+  - rule_id: IHC-001
+    step: IHC
+    applies_at: IHC_STAINING
+    trigger: HER2 added by pathologist and fixation out of tolerance
+    action: Reject specimen for HER2, flag to pathologist (set HER2_FIXATION_REJECT)
+    priority: 1
+    source: IHC SOP, Section 6.1
+
+  - rule_id: IHC-002
+    step: IHC
+    applies_at: IHC_QC
+    trigger: All slides stained and QC passed
+    action: Route to IHC_SCORING
+    priority: 2
+    source: IHC SOP, Section 6.2
+
+  - rule_id: IHC-003
+    step: IHC
+    applies_at: IHC_QC
+    trigger: Some slides still pending
+    action: HOLD — wait for remaining slides
+    priority: 3
+    source: IHC SOP, Section 6.3
+
+  - rule_id: IHC-004
+    step: IHC
+    applies_at: IHC_QC
+    trigger: Staining failed
+    action: RETRY staining
+    priority: 4
+    source: IHC SOP, Section 6.4
+
+  - rule_id: IHC-005
+    step: IHC
+    applies_at: IHC_QC
+    trigger: Staining failed, insufficient tissue
+    action: ABORT — ORDER_TERMINATED_QNS
+    priority: 5
+    source: IHC SOP, Section 6.5
+
+  - rule_id: IHC-006
+    step: IHC
+    applies_at: IHC_SCORING
+    trigger: Scoring complete, no equivocal results
+    action: Route to RESULTING
+    priority: 6
+    source: IHC SOP, Section 7.1
+
+  - rule_id: IHC-007
+    step: IHC
+    applies_at: IHC_SCORING
+    trigger: HER2 equivocal
+    action: SUGGEST_FISH_REFLEX — requires pathologist approval
+    priority: 7
+    source: IHC SOP, Section 7.2
+
+  - rule_id: IHC-008
+    step: IHC
+    applies_at: SUGGEST_FISH_REFLEX
+    trigger: Pathologist approves FISH reflex
+    action: FISH_SEND_OUT — external test
+    priority: 8
+    source: IHC SOP, Section 7.3
+
+  - rule_id: IHC-009
+    step: IHC
+    applies_at: SUGGEST_FISH_REFLEX
+    trigger: Pathologist declines FISH reflex
+    action: Route to RESULTING
+    priority: 9
+    source: IHC SOP, Section 7.4
+
+  - rule_id: IHC-010
+    step: IHC
+    applies_at: FISH_SEND_OUT
+    trigger: FISH result received
+    action: Route to RESULTING
+    priority: 10
+    source: IHC SOP, Section 7.5
+
+  - rule_id: IHC-011
+    step: IHC
+    applies_at: FISH_SEND_OUT
+    trigger: FISH external lab returns QNS
+    action: ABORT — ORDER_TERMINATED_QNS
+    priority: 11
+    source: IHC SOP, Section 7.6
+
+  # --- Resulting (priority-based, first-match evaluation) ---
+  - rule_id: RES-001
+    step: RESULTING
+    trigger: MISSING_INFO_PROCEED flag present
+    action: RESULTING_HOLD — block until info received
+    priority: 1
+    source: Resulting SOP, Section 8.1
+
+  - rule_id: RES-002
+    step: RESULTING
+    trigger: Info received, re-evaluate flags
+    action: If flag cleared proceed to RESULTING; if still missing remain in RESULTING_HOLD
+    priority: 2
+    source: Resulting SOP, Section 8.2
+
+  - rule_id: RES-003
+    step: RESULTING
+    trigger: All scoring/testing complete, no blocking flags
+    action: Route to PATHOLOGIST_SIGNOUT
+    priority: 3
+    source: Resulting SOP, Section 8.3
+
+  - rule_id: RES-004
+    step: RESULTING
+    trigger: Pathologist selects reportable tests
+    action: Route to REPORT_GENERATION (update slide reported flags)
+    priority: 4
+    source: Resulting SOP, Section 8.4
+
+  - rule_id: RES-005
+    step: RESULTING
+    trigger: Report generated
+    action: ORDER_COMPLETE
+    priority: 5
+    source: Resulting SOP, Section 8.5
+
+# ---------------------------------------------------------------------------
+# Accessioning evaluation logic
+# ---------------------------------------------------------------------------
+accessioning_logic:
+  evaluation_mode: all_match
+  description: >
+    All accessioning rules are evaluated on every order. Multiple rules can
+    fire simultaneously. The outcome is determined by the highest-severity
+    match using the severity hierarchy.
+  severity_hierarchy:
+    - REJECT    # DO_NOT_PROCESS — order rejected
+    - HOLD      # MISSING_INFO_HOLD — order held, critical info needed
+    - PROCEED   # MISSING_INFO_PROCEED — order proceeds with flag
+    - ACCEPT    # ACCEPTED — no issues
+
+# ---------------------------------------------------------------------------
+# Flags
+# ---------------------------------------------------------------------------
+flags:
+  - flag_id: MISSING_INFO_PROCEED
+    set_at: ACCESSIONING
+    effect: Blocks resulting until info is resolved; order proceeds through IHC normally
+    cleared_by: Missing info received
+
+  - flag_id: FIXATION_WARNING
+    set_at: [ACCESSIONING, IHC]  # Spec says "Accessioning or IHC"; no rule explicitly sets this flag yet
+    effect: Alerts that fixation was borderline or needs review
+    cleared_by: Pathologist review
+
+  - flag_id: RECUT_REQUESTED
+    set_at: PATHOLOGIST_HE_REVIEW
+    effect: Tracks that slides were recut (affects tissue availability assessment)
+    cleared_by: Recut completed
+
+  - flag_id: HER2_FIXATION_REJECT
+    set_at: IHC
+    effect: HER2 rejected due to fixation out of tolerance, flagged to pathologist
+    cleared_by: Pathologist decision
+
+  - flag_id: FISH_SUGGESTED
+    set_at: IHC_SCORING
+    effect: HER2 equivocal, FISH reflex suggested pending pathologist approval
+    cleared_by: Pathologist approves or declines FISH
+
+# ---------------------------------------------------------------------------
+# Terminal states
+# ---------------------------------------------------------------------------
+terminal_states:
+  - ORDER_COMPLETE
+  - ORDER_TERMINATED
+  - ORDER_TERMINATED_QNS

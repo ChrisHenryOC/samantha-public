@@ -1,0 +1,29 @@
+# Evaluation parameters for the test harness.
+
+evaluation:
+  # Default runs per provider. Per-model `runs` in models.yaml takes
+  # precedence.
+  runs_per_model:
+    openrouter: 1
+    llamacpp: 1
+    ollama: 1
+
+  # Maximum seconds to wait for a single model inference call.
+  timeout_seconds: 120
+
+  # Directory for evaluation run outputs (relative to project root).
+  output_directory: "results"
+
+# RAG pipeline settings.
+rag:
+  # Number of chunks to retrieve per query.
+  # Increased from 5 to 10: root cause analysis showed Rule Catalog chunk
+  # ranks 8th for accessioning queries (GH-161).
+  top_k: 10
+
+  # Minimum cosine similarity to include a chunk.
+  # Set to 0.3 to filter low-relevance noise (was 0.0 = no filtering).
+  similarity_threshold: 0.3
+
+  # Path to the persistent ChromaDB index (relative to project root).
+  index_path: "data/rag_index"

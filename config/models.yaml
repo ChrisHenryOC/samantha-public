@@ -1,0 +1,325 @@
+# Model definitions for the evaluation system.
+#
+# Most models route through OpenRouter. Local models use llama.cpp (llama-server).
+# Use only with synthetic test data — never with real patient data.
+#
+# Each entry defines a model adapter with its provider, model ID, tier,
+# and default inference parameters. Token limits are used for prompt
+# truncation and cost estimation.
+#
+# Tiers reflect deployable hardware targets:
+#   1 = 16GB VRAM (RTX 4060 Ti / RTX 5060 Ti)
+#   2 = 24GB VRAM (RTX 4090)
+#   3 = MoE — fast inference on 24GB
+#   ceiling = cloud models (ceiling benchmarks, 1 run each)
+#
+# Local models (provider: llamacpp) have additional optional fields:
+#   hf_repo: HuggingFace GGUF repo for auto-download (e.g. "bartowski/Qwen3-8B-GGUF:Q4_K_M")
+#   server_params: llama-server flags (gpu_layers, flash_attn, threads, ctx_size)
+
+models:
+  # --- Local models (llama.cpp) ---
+  - name: "Llama 3.1 8B"
+    provider: llamacpp
+    model_id: "llama-3.1-8b"
+    hf_repo: "bartowski/Meta-Llama-3.1-8B-Instruct-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 4096
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  - name: "Qwen3 8B Local"
+    provider: llamacpp
+    model_id: "qwen3-8b"
+    hf_repo: "bartowski/Qwen_Qwen3-8B-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 4096
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  - name: "Qwen3 14B Local"
+    provider: llamacpp
+    model_id: "qwen3-14b"
+    hf_repo: "bartowski/Qwen_Qwen3-14B-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 8192
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+
+  # --- Local Tier 1: 8-14B models ---
+  - name: "Gemma 3 12B Local"
+    provider: llamacpp
+    model_id: "gemma-3-12b"
+    hf_repo: "bartowski/google_gemma-3-12b-it-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 4096
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  # --- Local Tier 2: 24-27B models ---
+  - name: "Mistral Small 3.2 24B Local"
+    provider: llamacpp
+    model_id: "mistral-small-3.2-24b"
+    hf_repo: "bartowski/mistralai_Mistral-Small-3.2-24B-Instruct-2506-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 4096
+    tier: 2
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  # --- Local Tier 3: MoE model ---
+  - name: "Qwen3 30B-A3B Local"
+    provider: llamacpp
+    model_id: "qwen3-30b-a3b"
+    hf_repo: "bartowski/Qwen_Qwen3-30B-A3B-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 4096
+    tier: 3
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  - name: "Gemma 3 27B Local"
+    provider: llamacpp
+    model_id: "gemma-3-27b"
+    hf_repo: "bartowski/google_gemma-3-27b-it-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 4096
+    tier: 2
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  # --- Local coding model: 32B ---
+  - name: "Qwen2.5 Coder 32B Local"
+    provider: llamacpp
+    model_id: "qwen2.5-coder-32b"
+    hf_repo: "bartowski/Qwen2.5-Coder-32B-Instruct-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 8192
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  # --- Local general-purpose: Qwen3 32B ---
+  - name: "Qwen3 32B Q4 Local"
+    provider: llamacpp
+    model_id: "qwen3-32b-q4"
+    hf_repo: "bartowski/Qwen_Qwen3-32B-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 8192
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  - name: "Qwen3 32B Q5 Local"
+    provider: llamacpp
+    model_id: "qwen3-32b-q5"
+    hf_repo: "bartowski/Qwen_Qwen3-32B-GGUF:Q5_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 8192
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  # --- Local large: 70B model ---
+  - name: "Llama 3.3 70B Local"
+    provider: llamacpp
+    model_id: "llama-3.3-70b"
+    hf_repo: "bartowski/Llama-3.3-70B-Instruct-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 8192
+    tier: 2
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  # --- Ollama MLX benchmark ---
+  - name: "Qwen3.5 35B-A3B Ollama MLX"
+    provider: ollama
+    model_id: "qwen3.5:35b-a3b"
+    tier: 3
+    runs: 3
+    parameters:
+      temperature: 0.0
+      max_tokens: 8192  # Qwen3.5 uses extended thinking; needs headroom
+    token_limit: 131072
+
+  # --- Local llama.cpp benchmark (same model for comparison) ---
+  - name: "Qwen3.5 35B-A3B Local"
+    provider: llamacpp
+    model_id: "qwen3.5-35b-a3b"
+    hf_repo: "bartowski/Qwen_Qwen3.5-35B-A3B-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 8192
+    tier: 3
+    runs: 3
+    parameters:
+      temperature: 0.0
+      max_tokens: 8192  # Qwen3.5 uses extended thinking; needs headroom
+    token_limit: 131072
+
+  # --- Tier 1: 16GB VRAM candidates (5 runs each) ---
+  - name: "Qwen3 8B"
+    provider: openrouter
+    model_id: "qwen/qwen3-8b"
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  - name: "Phi-4 14B"
+    provider: openrouter
+    model_id: "microsoft/phi-4"
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 16384
+
+  # --- Tier 2: 24GB VRAM candidates (5 runs each) ---
+  - name: "Qwen3 32B"
+    provider: openrouter
+    model_id: "qwen/qwen3-32b"
+    tier: 2
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  - name: "Mistral Small 3.2 24B"
+    provider: openrouter
+    model_id: "mistralai/mistral-small-3.2-24b-instruct"
+    tier: 2
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  - name: "Gemma 3 27B"
+    provider: openrouter
+    model_id: "google/gemma-3-27b-it"
+    tier: 2
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  # --- Tier 3: MoE — fast inference on 24GB (5 runs each) ---
+  - name: "Qwen3.5 35B-A3B"
+    provider: openrouter
+    model_id: "qwen/qwen3.5-35b-a3b"
+    tier: 3
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  # --- Ceiling benchmarks (1 run each) ---
+  - name: "Claude Haiku 4.5"
+    provider: openrouter
+    model_id: "claude-haiku-4-5-20251001"
+    tier: ceiling
+    runs: 1
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 200000
+
+  - name: "Claude Sonnet 4.6"
+    provider: openrouter
+    model_id: "claude-sonnet-4-6-20250514"
+    tier: ceiling
+    runs: 1
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 200000
+
+  - name: "Claude Opus 4.6"
+    provider: openrouter
+    model_id: "claude-opus-4-6-20250514"
+    tier: ceiling
+    runs: 1
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 200000

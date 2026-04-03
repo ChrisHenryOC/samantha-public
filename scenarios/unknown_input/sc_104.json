@@ -1,0 +1,34 @@
+{
+  "scenario_id": "SC-104",
+  "category": "unknown_input",
+  "description": "Completely empty order data (all fields missing/null) \u2192 DO_NOT_PROCESS; model must identify all defects: missing name, sex, invalid site, unknown specimen, no billing",
+  "events": [
+    {
+      "step": 1,
+      "event_type": "order_received",
+      "event_data": {
+        "patient_name": null,
+        "age": null,
+        "sex": null,
+        "specimen_type": null,
+        "anatomic_site": null,
+        "fixative": null,
+        "fixation_time_hours": null,
+        "ordered_tests": [],
+        "priority": null,
+        "billing_info_present": false
+      },
+      "expected_output": {
+        "next_state": "DO_NOT_PROCESS",
+        "applied_rules": [
+          "ACC-001",
+          "ACC-002",
+          "ACC-003",
+          "ACC-004",
+          "ACC-007"
+        ],
+        "flags": []
+      }
+    }
+  ]
+}

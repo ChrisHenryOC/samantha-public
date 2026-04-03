@@ -1,0 +1,9 @@
+# Server configuration for the live routing system.
+# provider: "llamacpp" for local models, "openrouter" for cloud testing
+model_id: "qwen2.5-coder-32b"
+provider: "llamacpp"
+llamacpp_url: "http://localhost:8080"
+db_path: "data/live.sqlite"
+host: "127.0.0.1"
+port: 8000
+prompt_extras: "skills,retry_clarification"

@@ -1,0 +1,107 @@
+{
+  "scenario_id": "QR-016",
+  "category": "query",
+  "tier": 3,
+  "description": "Flag reasoning — identifying flags affecting an order",
+  "database_state": {
+    "orders": [
+      {
+        "order_id": "ORD-1601",
+        "current_state": "ACCEPTED",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-15T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-1602",
+        "current_state": "IHC_STAINING",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "rush",
+        "flags": [],
+        "created_at": "2025-01-14T10:00:00Z"
+      },
+      {
+        "order_id": "ORD-1603",
+        "current_state": "PATHOLOGIST_HE_REVIEW",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": ["FIXATION_WARNING"],
+        "created_at": "2025-01-14T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-1604",
+        "current_state": "SAMPLE_PREP_EMBEDDING",
+        "specimen_type": "resection",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-15T07:00:00Z"
+      },
+      {
+        "order_id": "ORD-1605",
+        "current_state": "ORDER_COMPLETE",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-12T09:00:00Z"
+      },
+      {
+        "order_id": "ORD-1606",
+        "current_state": "HE_QC",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-14T11:00:00Z"
+      },
+      {
+        "order_id": "ORD-1607",
+        "current_state": "RESULTING",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-13T10:00:00Z"
+      },
+      {
+        "order_id": "ORD-1608",
+        "current_state": "SAMPLE_PREP_PROCESSING",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": ["MISSING_INFO_PROCEED"],
+        "created_at": "2025-01-15T06:00:00Z"
+      },
+      {
+        "order_id": "ORD-1609",
+        "current_state": "PATHOLOGIST_SIGNOUT",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "rush",
+        "flags": [],
+        "created_at": "2025-01-13T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-1610",
+        "current_state": "IHC_QC",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "created_at": "2025-01-14T14:00:00Z"
+      }
+    ],
+    "slides": []
+  },
+  "query": "What flags are affecting order ORD-1603?",
+  "expected_output": {
+    "answer_type": "order_status",
+    "order_ids": ["ORD-1603"],
+    "reasoning": "ORD-1603 has the FIXATION_WARNING flag. This flag indicates that the specimen's fixation time was borderline — close to the acceptable limits for histology processing. The pathologist reviewing the H&E slides should be aware of this warning as it may affect tissue quality and interpretation of results."
+  }
+}

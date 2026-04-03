@@ -1,0 +1,127 @@
+{
+  "scenario_id": "QR-023",
+  "category": "query",
+  "tier": 5,
+  "description": "Cross-order reasoning — identifying orders at risk of fixation timing out",
+  "database_state": {
+    "orders": [
+      {
+        "order_id": "ORD-2301",
+        "current_state": "ACCESSIONING",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "ordered_tests": ["Breast IHC Panel"],
+        "fixation_time_hours": 68.0,
+        "created_at": "2025-01-15T06:00:00Z"
+      },
+      {
+        "order_id": "ORD-2302",
+        "current_state": "ACCESSIONING",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "rush",
+        "flags": [],
+        "ordered_tests": ["H&E"],
+        "fixation_time_hours": 24.0,
+        "created_at": "2025-01-15T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-2303",
+        "current_state": "ACCEPTED",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "ordered_tests": ["Breast IHC Panel"],
+        "fixation_time_hours": 70.5,
+        "created_at": "2025-01-14T10:00:00Z"
+      },
+      {
+        "order_id": "ORD-2304",
+        "current_state": "ACCESSIONING",
+        "specimen_type": "resection",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "ordered_tests": ["Breast IHC Panel"],
+        "fixation_time_hours": 12.0,
+        "created_at": "2025-01-15T09:00:00Z"
+      },
+      {
+        "order_id": "ORD-2305",
+        "current_state": "ACCEPTED",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "rush",
+        "flags": [],
+        "ordered_tests": ["Breast IHC Panel"],
+        "fixation_time_hours": 18.0,
+        "created_at": "2025-01-15T07:00:00Z"
+      },
+      {
+        "order_id": "ORD-2306",
+        "current_state": "SAMPLE_PREP_PROCESSING",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "ordered_tests": ["H&E"],
+        "fixation_time_hours": null,
+        "created_at": "2025-01-14T14:00:00Z"
+      },
+      {
+        "order_id": "ORD-2307",
+        "current_state": "HE_STAINING",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "ordered_tests": ["Breast IHC Panel"],
+        "fixation_time_hours": null,
+        "created_at": "2025-01-14T09:00:00Z"
+      },
+      {
+        "order_id": "ORD-2308",
+        "current_state": "ORDER_COMPLETE",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "ordered_tests": ["Breast IHC Panel"],
+        "fixation_time_hours": null,
+        "created_at": "2025-01-12T08:00:00Z"
+      },
+      {
+        "order_id": "ORD-2309",
+        "current_state": "PATHOLOGIST_HE_REVIEW",
+        "specimen_type": "excision",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "ordered_tests": ["H&E"],
+        "fixation_time_hours": null,
+        "created_at": "2025-01-13T10:00:00Z"
+      },
+      {
+        "order_id": "ORD-2310",
+        "current_state": "ACCESSIONING",
+        "specimen_type": "biopsy",
+        "anatomic_site": "breast",
+        "priority": "routine",
+        "flags": [],
+        "ordered_tests": ["Breast IHC Panel"],
+        "fixation_time_hours": 65.0,
+        "created_at": "2025-01-15T05:00:00Z"
+      }
+    ],
+    "slides": []
+  },
+  "query": "Are any orders at risk of timing out on fixation?",
+  "expected_output": {
+    "answer_type": "order_list",
+    "order_ids": ["ORD-2303", "ORD-2301", "ORD-2310"],
+    "reasoning": "Rule ACC-006 requires fixation time within 6-72 hours when HER2 is ordered (Breast IHC Panel includes HER2). ORD-2303 has Breast IHC Panel ordered with 70.5 hours fixation (ACCEPTED, still awaiting grossing). ORD-2301 has Breast IHC Panel ordered with 68.0 hours fixation (ACCESSIONING). ORD-2310 has Breast IHC Panel ordered with 65.0 hours fixation (ACCESSIONING). All three are approaching the 72-hour limit and require attention. Other orders with Breast IHC Panel (ORD-2304 at 12.0h, ORD-2305 at 18.0h) are well within the safe range. Orders with only H&E (ORD-2302, ORD-2306, ORD-2309) are not subject to ACC-006."
+  }
+}
