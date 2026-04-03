@@ -44,7 +44,13 @@ scenarios/              # 100+ test scenarios across 6 categories
 tests/                  # Unit tests and red team tests
 scripts/                # Evaluation and utility scripts
 docs/                   # Technical and workflow documentation
+.claude/                # Claude Code agents, hooks, and commands
+CLAUDE.md               # Claude Code project instructions
 ```
+
+### A note on the .claude/ folder
+
+This repo includes the `.claude/` directory and `CLAUDE.md` file used during development with [Claude Code](https://claude.ai/claude-code).  These have been updated since the initial [Managing Your AI Developer](https://chenryventures.substack.com/p/managing-your-ai-developer-a-practical) article, but they give you a look at how the AI coding assistant was configured and directed throughout the project: custom agents for code review, pre-commit hooks, slash commands, and project-level instructions.
 
 ## Quick Start
 
