@@ -42,6 +42,10 @@ venv/
 data/rag_index/
 data/live.sqlite*
 
+# Runtime data
+data/llama-server.log
+data/llama-server.pid
+
 # Evaluation results (generated at runtime)
 results*/
 
@@ -51,3 +55,4 @@ notes/
 # OS
 .DS_Store
 Thumbs.db
+
