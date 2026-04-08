@@ -1003,6 +1003,8 @@ class TestFormatPromptExtras:
             "retry_clarification",
             "few_shot",
             "skills",
+            "routing_tools",
+            "routing_tools_lite",
         } == VALID_PROMPT_EXTRAS
 
 

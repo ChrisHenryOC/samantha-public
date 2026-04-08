@@ -438,8 +438,8 @@ class TestPredictQueryWithToolsMaxTurns:
     """Max turn limit prevents infinite loops."""
 
     def test_max_turns_exceeded(self) -> None:
-        """Model keeps calling tools for 10+ turns."""
-        # Return tool calls for all 10 turns
+        """Model keeps calling tools beyond the turn limit."""
+        max_turns = PredictionEngine._MAX_QUERY_TOOL_TURNS
         responses = [
             _tool_call_response(
                 [(f"call_{i}", "list_orders", {})],
@@ -447,7 +447,7 @@ class TestPredictQueryWithToolsMaxTurns:
                 input_tokens=5,
                 output_tokens=3,
             )
-            for i in range(10)
+            for i in range(max_turns)
         ]
         adapter = MockChatAdapter(responses)
         engine = PredictionEngine(adapter)
@@ -458,12 +458,12 @@ class TestPredictQueryWithToolsMaxTurns:
 
         assert result.error is not None
         assert "max_turns_exceeded" in result.error
-        assert result.turns == 10
-        assert len(result.tool_calls) == 10
+        assert result.turns == max_turns
+        assert len(result.tool_calls) == max_turns
         # Token accumulation across all turns
-        assert result.total_latency_ms == pytest.approx(100.0)
-        assert result.total_input_tokens == 50
-        assert result.total_output_tokens == 30
+        assert result.total_latency_ms == pytest.approx(max_turns * 10.0)
+        assert result.total_input_tokens == max_turns * 5
+        assert result.total_output_tokens == max_turns * 3
 
 
 class TestPredictQueryWithToolsTokenAccumulation:

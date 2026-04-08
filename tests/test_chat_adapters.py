@@ -325,7 +325,9 @@ class TestLlamaCppChatSuccess:
         tc = result.message.tool_calls[0]
         assert tc.function_name == "get_order"
         assert tc.arguments == {"order_id": "ORD-101"}
-        assert tc.id == "call_abc123"
+        # Tool call IDs are normalized to 9 alphanumeric chars
+        assert len(tc.id) == 9
+        assert tc.id.isalnum()
         adapter.close()
 
     def test_multiple_tool_calls(self) -> None:
@@ -349,8 +351,9 @@ class TestLlamaCppChatSuccess:
             result = adapter.chat(_sample_messages(), tools=[_SAMPLE_TOOL])
 
         assert len(result.message.tool_calls) == 2
-        assert result.message.tool_calls[0].id == "call_0"
-        assert result.message.tool_calls[1].id == "call_1"
+        assert len(result.message.tool_calls[0].id) == 9
+        assert len(result.message.tool_calls[1].id) == 9
+        assert result.message.tool_calls[0].id != result.message.tool_calls[1].id
         adapter.close()
 
     def test_sends_correct_payload(self) -> None:
