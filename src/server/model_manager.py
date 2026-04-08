@@ -116,17 +116,58 @@ def _find_llama_server_binary() -> str:
     )
 
 
+def _resolve_model_path(hf_repo: str) -> Path | None:
+    """Find a locally cached GGUF file for an hf_repo spec.
+
+    Checks both the ``huggingface-cli download --local-dir`` naming
+    (plain filename) and the llama-server ``-hf`` naming (prefixed with
+    repo path) in the llama.cpp cache directory.
+    """
+    cache_dir = Path.home() / "Library" / "Caches" / "llama.cpp"
+    if not cache_dir.is_dir():
+        return None
+
+    # hf_repo format: "bartowski/google_gemma-4-31B-it-GGUF:Q4_K_M"
+    parts = hf_repo.split(":")
+    repo = parts[0]  # "bartowski/google_gemma-4-31B-it-GGUF"
+    quant = parts[1] if len(parts) > 1 else ""
+
+    # Derive the expected filename from the repo name
+    # "bartowski/Foo-Bar-GGUF" -> base "Foo-Bar", quant "Q4_K_M" -> "Foo-Bar-Q4_K_M.gguf"
+    repo_name = repo.split("/")[-1]  # "google_gemma-4-31B-it-GGUF"
+    base_name = repo_name.removesuffix("-GGUF").removesuffix("_GGUF")
+
+    filename = f"{base_name}-{quant}.gguf" if quant else f"{base_name}.gguf"
+
+    # Check huggingface-cli download naming (plain filename)
+    plain_path = cache_dir / filename
+    if plain_path.exists():
+        return plain_path
+
+    # Check llama-server -hf naming (repo_owner_repo-name_filename)
+    hf_name = f"{repo.replace('/', '_')}_{filename}"
+    hf_path = cache_dir / hf_name
+    if hf_path.exists():
+        return hf_path
+
+    return None
+
+
 def _build_server_args(binary: str, model: LocalModelEntry, port: int) -> list[str]:
-    """Build the llama-server command-line arguments."""
+    """Build the llama-server command-line arguments.
+
+    Uses ``-m`` (direct path) if the GGUF is already cached locally,
+    otherwise falls back to ``-hf`` (auto-download from HuggingFace).
+    """
     params = model.server_params
-    args = [
-        binary,
-        "-hf",
-        model.hf_repo,
-        "--port",
-        str(port),
-        "--jinja",
-    ]
+
+    local_path = _resolve_model_path(model.hf_repo)
+    if local_path is not None:
+        logger.info("Using cached model: %s", local_path)
+        args = [binary, "-m", str(local_path), "--port", str(port), "--jinja"]
+    else:
+        logger.info("Model not cached locally, using -hf for download: %s", model.hf_repo)
+        args = [binary, "-hf", model.hf_repo, "--port", str(port), "--jinja"]
     if params.get("gpu_layers") is not None:
         args.extend(["--gpu-layers", str(params["gpu_layers"])])
     if params.get("flash_attn"):

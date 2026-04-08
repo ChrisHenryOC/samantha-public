@@ -94,7 +94,7 @@ models:
       gpu_layers: 99
       flash_attn: true
       threads: 6
-      ctx_size: 4096
+      ctx_size: 32768
     tier: 2
     runs: 5
     parameters:
@@ -150,6 +150,105 @@ models:
     parameters:
       temperature: 0.0
       max_tokens: 1024
+    token_limit: 131072
+
+  # --- Llama 4 Scout (MoE, 17B total, 16 experts) ---
+  - name: "Llama 4 Scout 17B Local"
+    provider: llamacpp
+    model_id: "llama-4-scout-17b"
+    hf_repo: "unsloth/Llama-4-Scout-17B-16E-Instruct-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 32768
+    tier: 2
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 1024
+    token_limit: 131072
+
+  # --- Gemma 4 models (tool use support) ---
+  - name: "Gemma 4 31B Local"
+    provider: llamacpp
+    model_id: "gemma-4-31b"
+    hf_repo: "bartowski/google_gemma-4-31B-it-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 32768
+    tier: 2
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 16384  # Gemma 4 uses thinking mode; needs headroom
+    token_limit: 131072
+
+  - name: "Gemma 4 26B-A4B Local"
+    provider: llamacpp
+    model_id: "gemma-4-26b-a4b"
+    hf_repo: "bartowski/google_gemma-4-26B-A4B-it-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 65536
+    tier: 3
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 32768  # Bumped from 16k; thinking mode + tool calls need more headroom
+    token_limit: 131072
+
+  - name: "Gemma 4 E4B Local"
+    provider: llamacpp
+    model_id: "gemma-4-e4b"
+    hf_repo: "bartowski/google_gemma-4-E4B-it-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 32768
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 16384  # Gemma 4 uses thinking mode; needs headroom
+    token_limit: 131072
+
+  - name: "Gemma 4 E2B Local"
+    provider: llamacpp
+    model_id: "gemma-4-e2b"
+    hf_repo: "bartowski/google_gemma-4-E2B-it-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 32768
+    tier: 1
+    runs: 5
+    parameters:
+      temperature: 0.0
+      max_tokens: 16384  # Gemma 4 uses thinking mode; needs headroom
+    token_limit: 131072
+
+  # --- Local coding model: Qwen3 Coder 30B-A3B (MoE, thinking) ---
+  - name: "Qwen3 Coder 30B-A3B Local"
+    provider: llamacpp
+    model_id: "qwen3-coder-30b-a3b"
+    hf_repo: "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:Q4_K_M"
+    server_params:
+      gpu_layers: 99
+      flash_attn: true
+      threads: 6
+      ctx_size: 8192
+    tier: 3
+    runs: 3
+    parameters:
+      temperature: 0.0
+      max_tokens: 8192  # Thinking model — needs headroom
     token_limit: 131072
 
   # --- Local general-purpose: Qwen3 32B ---

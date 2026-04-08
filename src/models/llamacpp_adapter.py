@@ -11,8 +11,10 @@ in plaintext over HTTP.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import re
 import time
 from collections.abc import Iterator
 from typing import Any
@@ -40,6 +42,9 @@ _SENTINEL_HTTP_ERROR = "<http_error>"
 _SENTINEL_TRANSPORT_ERROR = "<transport_error>"
 _SENTINEL_INVALID_JSON = "<invalid_json>"
 _SENTINEL_EMPTY_RESPONSE = "<empty_response>"
+
+# Compiled regex for parsing <tools> tags in text-mode tool calls.
+_TOOLS_TAG_RE = re.compile(r"<tools>\s*(.*?)\s*</tools>", re.DOTALL)
 
 
 class LlamaCppAdapter(ModelAdapter):
@@ -285,11 +290,26 @@ class LlamaCppAdapter(ModelAdapter):
         return formatted
 
     @staticmethod
+    def _normalize_tool_call_id(raw_id: str, index: int) -> str:
+        """Normalize a tool call ID to 9 alphanumeric characters.
+
+        Some model templates (Mistral) require tool call IDs to be exactly
+        9 alphanumeric characters. This normalizes any ID format to comply.
+        """
+        # If already compliant, use as-is
+        if len(raw_id) == 9 and raw_id.isalnum():
+            return raw_id
+        # Generate a deterministic 9-char alphanumeric ID
+        digest = hashlib.md5(f"{raw_id}_{index}".encode()).hexdigest()
+        return digest[:9]
+
+    @staticmethod
     def _parse_tool_calls(raw_tool_calls: list[dict[str, Any]]) -> tuple[ToolCall, ...]:
         """Parse OpenAI-format tool_calls response into ToolCall dataclasses."""
         result: list[ToolCall] = []
         for i, raw_tc in enumerate(raw_tool_calls):
-            call_id = raw_tc.get("id", f"call_{i}")
+            raw_id = raw_tc.get("id", f"call_{i}")
+            call_id = LlamaCppAdapter._normalize_tool_call_id(raw_id, i)
             func = raw_tc.get("function", {})
             name = func.get("name", "")
             raw_args = func.get("arguments", "{}")
@@ -314,6 +334,60 @@ class LlamaCppAdapter(ModelAdapter):
                 arguments = {}
             result.append(ToolCall(id=call_id, function_name=name, arguments=arguments))
         return tuple(result)
+
+    @staticmethod
+    def _parse_text_tool_calls(content: str) -> tuple[ToolCall, ...]:
+        """Parse tool calls embedded as text in model content.
+
+        Some models (Qwen2.5 Coder) return tool calls as text instead of
+        using the structured tool_calls field. Handles two variants:
+
+        1. Wrapped in ``<tools>...</tools>`` tags
+        2. Bare JSON with ``name`` and ``arguments`` keys
+        """
+        result: list[ToolCall] = []
+
+        # Variant 1: <tools> tags
+        matches = _TOOLS_TAG_RE.findall(content)
+        if matches:
+            for i, match_text in enumerate(matches):
+                for line in match_text.strip().splitlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    parsed = json.loads(line)
+                    name = parsed.get("name", "")
+                    arguments = parsed.get("arguments", {})
+                    if isinstance(arguments, str):
+                        arguments = json.loads(arguments)
+                    result.append(
+                        ToolCall(
+                            id=LlamaCppAdapter._normalize_tool_call_id(
+                                f"text_call_{i}_{len(result)}", len(result)
+                            ),
+                            function_name=name,
+                            arguments=arguments,
+                        )
+                    )
+            return tuple(result)
+
+        # Variant 2: bare JSON with "name" and "arguments" keys
+        stripped = content.strip()
+        if stripped.startswith("{") and '"name"' in stripped and '"arguments"' in stripped:
+            parsed = json.loads(stripped)
+            if isinstance(parsed, dict) and "name" in parsed and "arguments" in parsed:
+                arguments = parsed["arguments"]
+                if isinstance(arguments, str):
+                    arguments = json.loads(arguments)
+                return (
+                    ToolCall(
+                        id=LlamaCppAdapter._normalize_tool_call_id("text_call_0_0", 0),
+                        function_name=parsed["name"],
+                        arguments=arguments,
+                    ),
+                )
+
+        return ()
 
     def _chat_error_response(
         self,
@@ -353,6 +427,7 @@ class LlamaCppAdapter(ModelAdapter):
             payload["stream_options"] = {"include_usage": True}
         if tools:
             payload["tools"] = tools
+            payload["parallel_tool_calls"] = True
         return payload
 
     def chat(
@@ -459,6 +534,19 @@ class LlamaCppAdapter(ModelAdapter):
                     f"malformed_tool_call: {exc}",
                 )
             content = None
+
+        # Some models (Qwen2.5 Coder) return tool calls as text instead
+        # of using the structured tool_calls field. Two variants:
+        # 1. Wrapped in <tools>...</tools> tags
+        # 2. Bare JSON with "name" and "arguments" keys
+        if not tool_calls and content:
+            try:
+                parsed_tcs = self._parse_text_tool_calls(content)
+                if parsed_tcs:
+                    tool_calls = parsed_tcs
+                    content = None
+            except (ValueError, json.JSONDecodeError) as exc:
+                logger.debug("Failed to parse text tool calls: %s", exc)
 
         if content is None and not tool_calls:
             return self._chat_error_response(
