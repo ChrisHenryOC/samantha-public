@@ -1,0 +1,302 @@
+{
+  "timestamps": {
+    "started_at": "2026-03-10T11:44:59.379792",
+    "completed_at": "2026-03-10T12:34:47.065962"
+  },
+  "models": [
+    {
+      "model_id": "claude-opus-4-6-20250514",
+      "query_accuracy": 88.88888888888889,
+      "query_accuracy_by_tier": {
+        "1": 100.0,
+        "2": 100.0,
+        "3": 100.0,
+        "4": 33.33333333333333,
+        "5": 80.0
+      },
+      "query_accuracy_by_answer_type": {
+        "order_list": 92.3076923076923,
+        "order_status": 100.0,
+        "prioritized_list": 33.33333333333333
+      },
+      "mean_precision": 0.9907407407407407,
+      "mean_recall": 1.0,
+      "mean_f1": 0.9947089947089947,
+      "scenario_reliability": 88.88888888888889,
+      "accuracy_std": null,
+      "latency_mean_ms": 6312.185185185185,
+      "latency_p50_ms": 5708.0,
+      "latency_p95_ms": 9680.199999999999,
+      "token_input_mean": 2941.259259259259,
+      "token_output_mean": 215.92592592592592,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "wrong_order_sequence": 2,
+        "extra_orders": 1
+      }
+    },
+    {
+      "model_id": "claude-sonnet-4-6-20250514",
+      "query_accuracy": 88.88888888888889,
+      "query_accuracy_by_tier": {
+        "1": 100.0,
+        "2": 100.0,
+        "3": 100.0,
+        "4": 66.66666666666666,
+        "5": 60.0
+      },
+      "query_accuracy_by_answer_type": {
+        "order_list": 84.61538461538461,
+        "order_status": 100.0,
+        "prioritized_list": 66.66666666666666
+      },
+      "mean_precision": 0.9506172839506173,
+      "mean_recall": 0.9320987654320988,
+      "mean_f1": 0.9382716049382716,
+      "scenario_reliability": 88.88888888888889,
+      "accuracy_std": null,
+      "latency_mean_ms": 5194.074074074074,
+      "latency_p50_ms": 4666.0,
+      "latency_p95_ms": 7965.7,
+      "token_input_mean": 2941.259259259259,
+      "token_output_mean": 192.55555555555554,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "missing_orders": 1,
+        "wrong_order_ids": 2
+      }
+    },
+    {
+      "model_id": "claude-haiku-4-5-20251001",
+      "query_accuracy": 81.48148148148148,
+      "query_accuracy_by_tier": {
+        "1": 100.0,
+        "2": 100.0,
+        "3": 100.0,
+        "4": 33.33333333333333,
+        "5": 40.0
+      },
+      "query_accuracy_by_answer_type": {
+        "order_list": 76.92307692307693,
+        "order_status": 100.0,
+        "prioritized_list": 33.33333333333333
+      },
+      "mean_precision": 0.9444444444444444,
+      "mean_recall": 0.9358024691358025,
+      "mean_f1": 0.9379188712522046,
+      "scenario_reliability": 81.48148148148148,
+      "accuracy_std": null,
+      "latency_mean_ms": 3070.8518518518517,
+      "latency_p50_ms": 2801.0,
+      "latency_p95_ms": 4178.9,
+      "token_input_mean": 2941.259259259259,
+      "token_output_mean": 184.44444444444446,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "wrong_order_sequence": 1,
+        "missing_orders": 2,
+        "wrong_order_ids": 1,
+        "extra_orders": 1
+      }
+    },
+    {
+      "model_id": "qwen/qwen3.5-35b-a3b",
+      "query_accuracy": 76.29629629629629,
+      "query_accuracy_by_tier": {
+        "1": 75.0,
+        "2": 100.0,
+        "3": 100.0,
+        "4": 33.33333333333333,
+        "5": 52.0
+      },
+      "query_accuracy_by_answer_type": {
+        "order_list": 66.15384615384615,
+        "order_status": 100.0,
+        "prioritized_list": 33.33333333333333
+      },
+      "mean_precision": 0.9574074074074074,
+      "mean_recall": 0.9762962962962963,
+      "mean_f1": 0.9615712682379349,
+      "scenario_reliability": 74.07407407407408,
+      "accuracy_std": 2.028602064833952,
+      "latency_mean_ms": 1632.2,
+      "latency_p50_ms": 1556.0,
+      "latency_p95_ms": 2545.9999999999995,
+      "token_input_mean": 2744.4444444444443,
+      "token_output_mean": 130.85925925925926,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "extra_orders": 17,
+        "wrong_order_sequence": 5,
+        "wrong_order_ids": 6,
+        "missing_orders": 4
+      }
+    },
+    {
+      "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+      "query_accuracy": 73.33333333333333,
+      "query_accuracy_by_tier": {
+        "1": 75.0,
+        "2": 100.0,
+        "3": 100.0,
+        "4": 0.0,
+        "5": 56.00000000000001
+      },
+      "query_accuracy_by_answer_type": {
+        "order_list": 67.6923076923077,
+        "order_status": 100.0,
+        "prioritized_list": 0.0
+      },
+      "mean_precision": 0.9555555555555556,
+      "mean_recall": 0.951604938271605,
+      "mean_f1": 0.9505467372134039,
+      "scenario_reliability": 70.37037037037037,
+      "accuracy_std": 1.6563466499998467,
+      "latency_mean_ms": 6718.822222222222,
+      "latency_p50_ms": 1756.0,
+      "latency_p95_ms": 19040.0,
+      "token_input_mean": 2706.0,
+      "token_output_mean": 111.25925925925925,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "wrong_order_ids": 12,
+        "extra_orders": 9,
+        "wrong_order_sequence": 4,
+        "missing_orders": 11
+      }
+    },
+    {
+      "model_id": "google/gemma-3-27b-it",
+      "query_accuracy": 68.88888888888889,
+      "query_accuracy_by_tier": {
+        "1": 75.0,
+        "2": 96.66666666666667,
+        "3": 100.0,
+        "4": 0.0,
+        "5": 36.0
+      },
+      "query_accuracy_by_answer_type": {
+        "order_list": 60.0,
+        "order_status": 98.18181818181819,
+        "prioritized_list": 0.0
+      },
+      "mean_precision": 0.9113168724279835,
+      "mean_recall": 0.9012345679012346,
+      "mean_f1": 0.8952204585537918,
+      "scenario_reliability": 62.96296296296296,
+      "accuracy_std": 2.028602064833952,
+      "latency_mean_ms": 5576.792592592593,
+      "latency_p50_ms": 4757.0,
+      "latency_p95_ms": 11686.199999999999,
+      "token_input_mean": 2740.748148148148,
+      "token_output_mean": 112.13333333333334,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "wrong_order_ids": 10,
+        "extra_orders": 13,
+        "missing_orders": 14,
+        "invalid_json": 4,
+        "wrong_order_sequence": 1
+      }
+    },
+    {
+      "model_id": "qwen/qwen3-32b",
+      "query_accuracy": 63.70370370370371,
+      "query_accuracy_by_tier": {
+        "1": 65.0,
+        "2": 90.0,
+        "3": 100.0,
+        "4": 0.0,
+        "5": 32.0
+      },
+      "query_accuracy_by_answer_type": {
+        "order_list": 52.307692307692314,
+        "order_status": 94.54545454545455,
+        "prioritized_list": 0.0
+      },
+      "mean_precision": 0.7418224573780129,
+      "mean_recall": 0.7496296296296296,
+      "mean_f1": 0.7431162664495998,
+      "scenario_reliability": 51.85185185185185,
+      "accuracy_std": 3.098740839015093,
+      "latency_mean_ms": 22127.896296296298,
+      "latency_p50_ms": 14751.0,
+      "latency_p95_ms": 72170.5,
+      "token_input_mean": 2605.125925925926,
+      "token_output_mean": 474.3925925925926,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "invalid_json": 31,
+        "wrong_order_ids": 6,
+        "wrong_order_sequence": 3,
+        "extra_orders": 7,
+        "missing_orders": 2
+      }
+    },
+    {
+      "model_id": "qwen/qwen3-8b",
+      "query_accuracy": 62.96296296296296,
+      "query_accuracy_by_tier": {
+        "1": 62.5,
+        "2": 100.0,
+        "3": 100.0,
+        "4": 0.0,
+        "5": 20.0
+      },
+      "query_accuracy_by_answer_type": {
+        "order_list": 46.15384615384615,
+        "order_status": 100.0,
+        "prioritized_list": 0.0
+      },
+      "mean_precision": 0.8898353909465021,
+      "mean_recall": 0.942962962962963,
+      "mean_f1": 0.9066153599486932,
+      "scenario_reliability": 62.96296296296296,
+      "accuracy_std": 0.0,
+      "latency_mean_ms": 2468.1481481481483,
+      "latency_p50_ms": 2319.0,
+      "latency_p95_ms": 4260.0,
+      "token_input_mean": 2603.0666666666666,
+      "token_output_mean": 111.3037037037037,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "wrong_order_ids": 16,
+        "extra_orders": 28,
+        "missing_orders": 6
+      }
+    },
+    {
+      "model_id": "microsoft/phi-4",
+      "query_accuracy": 59.25925925925925,
+      "query_accuracy_by_tier": {
+        "1": 60.0,
+        "2": 100.0,
+        "3": 100.0,
+        "4": 0.0,
+        "5": 4.0
+      },
+      "query_accuracy_by_answer_type": {
+        "order_list": 38.46153846153847,
+        "order_status": 100.0,
+        "prioritized_list": 0.0
+      },
+      "mean_precision": 0.8777865961199295,
+      "mean_recall": 0.858641975308642,
+      "mean_f1": 0.8497953075730853,
+      "scenario_reliability": 48.148148148148145,
+      "accuracy_std": 3.7037037037037024,
+      "latency_mean_ms": 4162.2962962962965,
+      "latency_p50_ms": 3301.0,
+      "latency_p95_ms": 10379.099999999999,
+      "token_input_mean": 2476.1111111111113,
+      "token_output_mean": 198.07407407407408,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "extra_orders": 16,
+        "missing_orders": 22,
+        "wrong_order_sequence": 5,
+        "wrong_order_ids": 12
+      }
+    }
+  ]
+}
