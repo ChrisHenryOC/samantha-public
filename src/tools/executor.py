@@ -43,6 +43,11 @@ class ToolExecutor:
             "get_slides": self._get_slides,
             "get_state_info": self._get_state_info,
             "get_flag_info": self._get_flag_info,
+            # Routing tools (tool-assisted routing experiment)
+            "check_threshold": self._check_threshold,
+            "check_field_present": self._check_field_present,
+            "check_enum_membership": self._check_enum_membership,
+            "list_applicable_rules": self._list_applicable_rules,
         }
 
     def execute(self, tool_name: str, arguments: dict[str, Any]) -> str:
@@ -113,3 +118,53 @@ class ToolExecutor:
         if flag_data is None:
             return {"error": f"Unknown flag: {flag_id}"}
         return {"flag_id": flag_id, **flag_data}
+
+    # --- Routing tools (tool-assisted routing experiment) ---
+
+    @staticmethod
+    def _check_threshold(
+        value: float | int,
+        min: float | int,
+        max: float | int,
+    ) -> dict[str, Any]:
+        """Check whether a numeric value falls within a range (inclusive)."""
+        in_range = min <= value <= max
+        return {"in_range": in_range, "value": value, "min": min, "max": max}
+
+    @staticmethod
+    def _check_field_present(
+        field_name: str,
+        field_value: Any,
+    ) -> dict[str, Any]:
+        """Check whether a field has a non-null, non-empty value."""
+        if field_value is None or (isinstance(field_value, str) and not field_value.strip()):
+            present = False
+        else:
+            present = True
+        return {"present": present, "field": field_name, "value": field_value}
+
+    @staticmethod
+    def _check_enum_membership(
+        value: str,
+        allowed_values: list[str],
+    ) -> dict[str, Any]:
+        """Check whether a value is in an allowed set (case-insensitive)."""
+        value_lower = value.lower()
+        allowed_lower = {v.lower() for v in allowed_values}
+        is_member = value_lower in allowed_lower
+        return {"is_member": is_member, "value": value, "allowed": allowed_values}
+
+    def _list_applicable_rules(self, current_state: str) -> list[dict[str, str]] | dict[str, str]:
+        """List all rules that could apply at the given workflow state."""
+        try:
+            rules = self._state_machine.get_rules_for_state(current_state)
+        except (ValueError, KeyError):
+            return {"error": f"Unknown state: {current_state}"}
+        return [
+            {
+                "rule_id": r.rule_id,
+                "trigger": r.trigger,
+                "action": r.action,
+            }
+            for r in rules
+        ]

@@ -100,7 +100,16 @@ Respond with ONLY a JSON object in this exact format, no other text:
 
 # --- Prompt extras: optional sections enabled via --prompt-extras CLI flag ---
 
-VALID_PROMPT_EXTRAS = frozenset({"state_sequence", "retry_clarification", "few_shot", "skills"})
+VALID_PROMPT_EXTRAS = frozenset(
+    {
+        "state_sequence",
+        "retry_clarification",
+        "few_shot",
+        "skills",
+        "routing_tools",
+        "routing_tools_lite",
+    }
+)
 
 _STATE_SEQUENCE_TEXT = """\
 ## Workflow Step Sequence
@@ -378,4 +387,180 @@ def render_prompt(
         order_state_json=order_json,
         slides_json=slides_json,
         event_json=event_json,
+    )
+
+
+# --- Tool-assisted routing messages ---
+
+_ROUTING_TOOL_INSTRUCTIONS = """\
+
+## Tool Usage
+
+You have access to tools for deterministic checks. Use them instead of \
+doing the math yourself:
+
+- **check_threshold**: For numeric range comparisons (e.g., is fixation \
+time between 6 and 72 hours?). Always use this for boundary checks.
+- **check_field_present**: For null/empty field validation (e.g., is \
+patient_name present?). Always use this for missing-info checks.
+- **check_enum_membership**: For set membership tests (e.g., is specimen \
+type one of the allowed types?). Always use this for enum validation.
+- **list_applicable_rules**: To get ALL rules for the current state. Call \
+this FIRST to ensure you evaluate every rule, especially at accessioning.
+
+After calling tools and collecting results, respond with the final JSON."""
+
+_ROUTING_TOOL_LITE_INSTRUCTIONS = """\
+
+## Tool Usage
+
+You have access to `list_applicable_rules` which returns ALL rules for \
+the current workflow state with their trigger descriptions. Call it FIRST \
+before evaluating any rules — this ensures you don't miss any.
+
+After getting the rule list, evaluate each rule yourself using the order \
+data provided, then respond with the final JSON."""
+
+
+def render_routing_tool_lite_messages(
+    order: Order,
+    slides: list[Slide],
+    event: Event,
+    *,
+    prompt_extras: frozenset[str] = frozenset(),
+) -> tuple:
+    """Render routing prompt for lite tool-use (list_applicable_rules only).
+
+    Same as ``render_routing_tool_messages`` but with minimal tool
+    instructions — only ``list_applicable_rules`` is referenced. The model
+    evaluates rule conditions itself rather than calling individual check tools.
+
+    Returns ``(system_message, user_message)`` as ChatMessage instances.
+    """
+    from src.models.base import ChatMessage, ChatRole
+
+    sm = StateMachine.get_instance()
+
+    use_skills = "skills" in prompt_extras
+    skill_text: str | None = None
+
+    if use_skills:
+        skill_text = get_skill_for_state(order.current_state)
+
+    rules_text = skill_text or _format_rules(sm.get_rules_for_state(order.current_state))
+
+    tool_extras = {"routing_tools", "routing_tools_lite"}
+    extras_block, retry_block = _format_prompt_extras(prompt_extras - tool_extras)
+    flag_vocabulary = sm.get_flag_vocabulary()
+    valid_states_text = _format_valid_states(sm.get_all_states())
+    valid_flags_text = _format_valid_flags(sm.get_all_flag_ids(), flag_vocabulary)
+    flag_text = _format_flag_reference(order.flags, flag_vocabulary)
+
+    system_content = (
+        "You are a laboratory workflow routing system for breast cancer specimens.\n\n"
+        f"## Your Rules\n\n{rules_text}\n\n"
+        f"{extras_block}\n"
+        f"## Valid Workflow States\n\n{valid_states_text}\n\n"
+        f"## Valid Flags\n\n{valid_flags_text}\n\n"
+        f"{flag_text}\n"
+        f"{_ROUTING_TOOL_LITE_INSTRUCTIONS}\n\n"
+        "## Instructions\n\n"
+        "1. Call `list_applicable_rules` to get ALL rules for this state.\n"
+        "2. Evaluate each rule against the order data.\n"
+        "3. For ACCESSIONING: identify ALL matching rules. Highest severity wins "
+        "(REJECT > HOLD > PROCEED > ACCEPT).\n"
+        "4. For other steps: identify the FIRST matching rule by priority.\n"
+        "5. Use ONLY formal rule IDs (e.g., ACC-001, SP-002).\n"
+        f"{retry_block}\n"
+        "Respond with ONLY a JSON object: "
+        '{"next_state": "...", "applied_rules": [...], '
+        '"flags": [...], "reasoning": "..."}'
+    )
+
+    order_json = _to_json_str(asdict(order))
+    slides_json = _to_json_str([asdict(s) for s in slides])
+    event_json = _to_json_str(asdict(event))
+
+    user_content = (
+        f"## Current Order State\n\n{order_json}\n\n"
+        f"## Slides\n\n{slides_json}\n\n"
+        f"## New Event\n\n{event_json}\n\n"
+        "Evaluate this order and route it to the correct next state."
+    )
+
+    return (
+        ChatMessage(role=ChatRole.SYSTEM, content=system_content),
+        ChatMessage(role=ChatRole.USER, content=user_content),
+    )
+
+
+def render_routing_tool_messages(
+    order: Order,
+    slides: list[Slide],
+    event: Event,
+    *,
+    prompt_extras: frozenset[str] = frozenset(),
+) -> tuple:
+    """Render routing prompt as system + user messages for tool-use routing.
+
+    The system message contains rules/skills, valid states, flags, and
+    tool usage instructions. The user message contains the order state,
+    slides, and event to evaluate.
+
+    Returns ``(system_message, user_message)`` as ChatMessage instances.
+    """
+    from src.models.base import ChatMessage, ChatRole
+
+    sm = StateMachine.get_instance()
+
+    use_skills = "skills" in prompt_extras
+    skill_text: str | None = None
+
+    if use_skills:
+        skill_text = get_skill_for_state(order.current_state)
+
+    rules_text = skill_text or _format_rules(sm.get_rules_for_state(order.current_state))
+
+    tool_extras = {"routing_tools", "routing_tools_lite"}
+    extras_block, retry_block = _format_prompt_extras(prompt_extras - tool_extras)
+    flag_vocabulary = sm.get_flag_vocabulary()
+    valid_states_text = _format_valid_states(sm.get_all_states())
+    valid_flags_text = _format_valid_flags(sm.get_all_flag_ids(), flag_vocabulary)
+    flag_text = _format_flag_reference(order.flags, flag_vocabulary)
+
+    system_content = (
+        "You are a laboratory workflow routing system for breast cancer specimens.\n\n"
+        f"## Your Rules\n\n{rules_text}\n\n"
+        f"{extras_block}\n"
+        f"## Valid Workflow States\n\n{valid_states_text}\n\n"
+        f"## Valid Flags\n\n{valid_flags_text}\n\n"
+        f"{flag_text}\n"
+        f"{_ROUTING_TOOL_INSTRUCTIONS}\n\n"
+        "## Instructions\n\n"
+        "1. Call `list_applicable_rules` first to get all rules for this state.\n"
+        "2. For each rule, use the appropriate tool to check its condition.\n"
+        "3. For ACCESSIONING: identify ALL matching rules. Highest severity wins "
+        "(REJECT > HOLD > PROCEED > ACCEPT).\n"
+        "4. For other steps: identify the FIRST matching rule by priority.\n"
+        "5. Use ONLY formal rule IDs (e.g., ACC-001, SP-002).\n"
+        f"{retry_block}\n"
+        "Respond with ONLY a JSON object: "
+        '{"next_state": "...", "applied_rules": [...], '
+        '"flags": [...], "reasoning": "..."}'
+    )
+
+    order_json = _to_json_str(asdict(order))
+    slides_json = _to_json_str([asdict(s) for s in slides])
+    event_json = _to_json_str(asdict(event))
+
+    user_content = (
+        f"## Current Order State\n\n{order_json}\n\n"
+        f"## Slides\n\n{slides_json}\n\n"
+        f"## New Event\n\n{event_json}\n\n"
+        "Evaluate this order and route it to the correct next state."
+    )
+
+    return (
+        ChatMessage(role=ChatRole.SYSTEM, content=system_content),
+        ChatMessage(role=ChatRole.USER, content=user_content),
     )

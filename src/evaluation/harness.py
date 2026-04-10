@@ -28,7 +28,21 @@ from src.models.config import EvaluationSettings, ModelConfig
 from src.models.llamacpp_adapter import LlamaCppAdapter
 from src.models.openrouter_adapter import OpenRouterAdapter
 from src.prediction.engine import PredictionEngine
-from src.simulator.schema import ExpectedOutput, Scenario, ScenarioStep
+from src.simulator.schema import (
+    DatabaseStateSnapshot as _DatabaseStateSnapshot,
+)
+from src.simulator.schema import (
+    ExpectedOutput,
+    Scenario,
+    ScenarioStep,
+)
+from src.tools.definitions import (
+    get_routing_tool_definitions as _get_routing_tool_definitions,
+)
+from src.tools.definitions import (
+    get_routing_tool_lite_definitions as _get_routing_tool_lite_definitions,
+)
+from src.tools.executor import ToolExecutor as _ToolExecutor
 from src.workflow.database import Database
 from src.workflow.models import (
     FIELD_MAX_LENGTHS,
@@ -778,14 +792,53 @@ class EvaluationHarness:
             # during the network call in parallel mode.
             db.insert_event(event)
 
-            # Run prediction
-            prediction = engine.predict_routing(
-                order,
-                slides,
-                event,
-                rag_retriever=self._rag_retriever,
-                prompt_extras=self._prompt_extras,
-            )
+            # Run prediction — tool-use, tool-lite, or standard path
+            use_tools = "routing_tools" in self._prompt_extras
+            use_tools_lite = "routing_tools_lite" in self._prompt_extras
+            if use_tools and use_tools_lite:
+                raise ValueError("routing_tools and routing_tools_lite are mutually exclusive")
+            tool_result = None
+            prediction = None
+
+            if use_tools or use_tools_lite:
+                order_dict = _order_snapshot(order)
+                slide_dicts = [
+                    {
+                        "slide_id": s.slide_id,
+                        "order_id": s.order_id,
+                        "test_assignment": s.test_assignment,
+                        "status": s.status,
+                        "qc_result": s.qc_result,
+                        "score_result": s.score_result,
+                    }
+                    for s in slides
+                ]
+                snapshot = _DatabaseStateSnapshot(
+                    orders=(order_dict,),
+                    slides=tuple(slide_dicts),
+                )
+                executor = _ToolExecutor(snapshot)
+                tool_defs = (
+                    _get_routing_tool_lite_definitions()
+                    if use_tools_lite
+                    else _get_routing_tool_definitions()
+                )
+                tool_result = engine.predict_routing_with_tools(
+                    order,
+                    slides,
+                    event,
+                    executor,
+                    tool_defs,
+                    prompt_extras=self._prompt_extras,
+                )
+            else:
+                prediction = engine.predict_routing(
+                    order,
+                    slides,
+                    event,
+                    rag_retriever=self._rag_retriever,
+                    prompt_extras=self._prompt_extras,
+                )
 
             # Build validation dicts — convert tuples to lists once
             expected_rules = list(step.expected_output.applied_rules)
@@ -796,18 +849,50 @@ class EvaluationHarness:
                 "flags": expected_flags,
             }
 
-            if prediction.error is not None:
+            # Extract prediction data from whichever path was used
+            if tool_result is not None:
+                p_error = tool_result.error
+                p_next_state = tool_result.next_state
+                p_rules = list(tool_result.applied_rules)
+                p_flags = list(tool_result.flags)
+                p_reasoning = tool_result.reasoning
+                p_latency = int(tool_result.total_latency_ms)
+                p_input_tokens = tool_result.total_input_tokens
+                p_output_tokens = tool_result.total_output_tokens
+                p_timed_out = "timeout" in (tool_result.error or "")
+                tool_calls_audit = [
+                    {
+                        "tool": tc.tool_name,
+                        "args": tc.arguments,
+                        "result": tc.result,
+                        "turn": tc.turn,
+                    }
+                    for tc in tool_result.tool_calls
+                ]
+            else:
+                assert prediction is not None
+                p_error = prediction.error
+                p_next_state = prediction.next_state
+                p_rules = list(prediction.applied_rules)
+                p_flags = list(prediction.flags)
+                p_reasoning = prediction.reasoning
+                p_latency = int(prediction.raw_response.latency_ms)
+                p_input_tokens = prediction.raw_response.input_tokens
+                p_output_tokens = prediction.raw_response.output_tokens
+                p_timed_out = prediction.raw_response.timed_out
+                tool_calls_audit = None
+
+            if p_error is not None:
                 validation = ValidationResult(
                     state_correct=False,
                     rules_correct=False,
                     flags_correct=False,
                 )
-                timed_out = prediction.raw_response.timed_out
                 failure_type = classify_failure(
                     None,
                     expected_dict,
                     VALID_STATES,
-                    timed_out=timed_out,
+                    timed_out=p_timed_out,
                     all_rule_ids=_get_all_rule_ids(),
                     all_flag_ids=VALID_FLAGS,
                 )
@@ -815,10 +900,10 @@ class EvaluationHarness:
                 predicted_rules: list[str] = []
                 predicted_flags: list[str] = []
             else:
-                predicted_rules = list(prediction.applied_rules)
-                predicted_flags = list(prediction.flags)
+                predicted_rules = p_rules
+                predicted_flags = p_flags
                 prediction_dict = {
-                    "next_state": prediction.next_state,
+                    "next_state": p_next_state,
                     "applied_rules": predicted_rules,
                     "flags": predicted_flags,
                 }
@@ -830,11 +915,9 @@ class EvaluationHarness:
                     all_rule_ids=_get_all_rule_ids(),
                     all_flag_ids=VALID_FLAGS,
                 )
-                predicted_state = prediction.next_state or ""
+                predicted_state = p_next_state or ""
 
             # Truncate model outputs to fit database field limits.
-            # Over-long values are hallucinated states — score them as wrong,
-            # don't crash the harness.
             max_state_len = FIELD_MAX_LENGTHS.get("predicted_next_state", 50)
             if len(predicted_state) > max_state_len:
                 logger.warning(
@@ -845,21 +928,27 @@ class EvaluationHarness:
                 )
                 predicted_state = predicted_state[:max_state_len]
 
+            model_output: dict[str, Any] = {
+                "next_state": predicted_state,
+                "applied_rules": predicted_rules,
+                "flags": predicted_flags,
+                "reasoning": p_reasoning,
+                "error": p_error,
+            }
+            if tool_calls_audit is not None:
+                model_output["tool_calls"] = tool_calls_audit
+
             decision = Decision(
                 decision_id=f"{run_id}-{scenario.scenario_id}-S{step.step}",
                 run_id=run_id,
                 event_id=event.event_id,
                 order_id=order.order_id,
                 model_id=engine.model_id,
-                order_state_snapshot=_order_snapshot(order),
+                order_state_snapshot=(
+                    order_dict if tool_result is not None else _order_snapshot(order)
+                ),
                 model_input={"prompt": "..."},  # Abbreviated for storage
-                model_output={
-                    "next_state": predicted_state,
-                    "applied_rules": predicted_rules,
-                    "flags": predicted_flags,
-                    "reasoning": prediction.reasoning,
-                    "error": prediction.error,
-                },
+                model_output=model_output,
                 predicted_next_state=predicted_state,
                 predicted_applied_rules=predicted_rules,
                 predicted_flags=predicted_flags,
@@ -869,9 +958,9 @@ class EvaluationHarness:
                 state_correct=validation.state_correct,
                 rules_correct=validation.rules_correct,
                 flags_correct=validation.flags_correct,
-                latency_ms=int(prediction.raw_response.latency_ms),
-                input_tokens=prediction.raw_response.input_tokens,
-                output_tokens=prediction.raw_response.output_tokens,
+                latency_ms=p_latency,
+                input_tokens=p_input_tokens,
+                output_tokens=p_output_tokens,
             )
             db.insert_decision(decision, _commit=False)
             step_results.append(

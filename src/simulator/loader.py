@@ -96,7 +96,7 @@ def load_scenario(path: Path) -> Scenario:
                 f"events[{i}].expected_output missing required keys: {sorted(missing_expected)}"
             )
 
-        # Validate list types before tuple conversion.
+        # Validate list types before tuple conversion (CLAUDE.md type-safety).
         raw_rules = expected["applied_rules"]
         if not isinstance(raw_rules, list):
             raise ValueError(

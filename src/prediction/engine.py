@@ -20,7 +20,11 @@ from src.models.base import (
     ModelResponse,
 )
 from src.models.parsing import parse_model_output, strip_code_fences
-from src.prediction.prompt_template import render_prompt
+from src.prediction.prompt_template import (
+    render_prompt,
+    render_routing_tool_lite_messages,
+    render_routing_tool_messages,
+)
 from src.prediction.query_prompt_template import (
     render_query_prompt,
     render_query_prompt_from_parts,
@@ -338,6 +342,52 @@ class ToolUseQueryResult:
             raise ValueError("model_id must be a non-empty string")
 
 
+@dataclass(frozen=True)
+class ToolUseRoutingResult:
+    """Result of a tool-assisted routing prediction.
+
+    Extends the standard routing result with tool call audit trail.
+    """
+
+    next_state: str | None
+    applied_rules: tuple[str, ...]
+    flags: tuple[str, ...]
+    reasoning: str | None
+    error: str | None
+    tool_calls: tuple[ToolCallRecord, ...]
+    turns: int
+    total_latency_ms: float | int
+    total_input_tokens: int
+    total_output_tokens: int
+    model_id: str
+
+    def __post_init__(self) -> None:
+        if self.next_state is not None and not isinstance(self.next_state, str):
+            raise TypeError(f"next_state must be str or None, got {type(self.next_state).__name__}")
+        if not isinstance(self.applied_rules, tuple):
+            raise TypeError(f"applied_rules must be tuple, got {type(self.applied_rules).__name__}")
+        if not isinstance(self.flags, tuple):
+            raise TypeError(f"flags must be tuple, got {type(self.flags).__name__}")
+        if self.error is not None and not isinstance(self.error, str):
+            raise TypeError(f"error must be str or None, got {type(self.error).__name__}")
+        if self.error is not None and self.next_state is not None:
+            raise ValueError("error and next_state are mutually exclusive")
+        if not isinstance(self.tool_calls, tuple):
+            raise TypeError(f"tool_calls must be tuple, got {type(self.tool_calls).__name__}")
+        if not isinstance(self.turns, int) or isinstance(self.turns, bool):
+            raise TypeError(f"turns must be int, got {type(self.turns).__name__}")
+        if self.turns < 0:
+            raise ValueError(f"turns must be non-negative, got {self.turns}")
+        if not isinstance(self.total_latency_ms, (int, float)) or isinstance(
+            self.total_latency_ms, bool
+        ):
+            raise TypeError(
+                f"total_latency_ms must be int or float, got {type(self.total_latency_ms).__name__}"
+            )
+        if not isinstance(self.model_id, str) or not self.model_id:
+            raise ValueError("model_id must be a non-empty string")
+
+
 # --- Prediction engine ---
 
 
@@ -620,7 +670,8 @@ class PredictionEngine:
 
     # --- Tool-use prediction ---
 
-    _MAX_TOOL_USE_TURNS = 10
+    _MAX_QUERY_TOOL_TURNS = 10
+    _MAX_ROUTING_TOOL_TURNS = 20
 
     def _tool_use_result(
         self,
@@ -691,7 +742,7 @@ class PredictionEngine:
         total_input_tokens = 0
         total_output_tokens = 0
 
-        for turn in range(1, self._MAX_TOOL_USE_TURNS + 1):
+        for turn in range(1, self._MAX_QUERY_TOOL_TURNS + 1):
             try:
                 response: ChatResponse = self._adapter.chat(messages, tools=tool_defs)
             except Exception as exc:
@@ -795,14 +846,261 @@ class PredictionEngine:
         # Max turns exceeded
         logger.warning(
             "Tool-use loop reached %d turns without converging %s",
-            self._MAX_TOOL_USE_TURNS,
+            self._MAX_QUERY_TOOL_TURNS,
             ctx,
         )
         return self._tool_use_result(
             parsed_output=None,
-            error=f"max_turns_exceeded: reached {self._MAX_TOOL_USE_TURNS} turns {ctx}",
+            error=f"max_turns_exceeded: reached {self._MAX_QUERY_TOOL_TURNS} turns {ctx}",
             tool_calls=all_tool_calls,
-            turns=self._MAX_TOOL_USE_TURNS,
+            turns=self._MAX_QUERY_TOOL_TURNS,
+            total_latency_ms=total_latency_ms,
+            total_input_tokens=total_input_tokens,
+            total_output_tokens=total_output_tokens,
+        )
+
+    # --- Tool-assisted routing prediction ---
+
+    def _routing_tool_result(
+        self,
+        *,
+        next_state: str | None,
+        applied_rules: tuple[str, ...],
+        flags: tuple[str, ...],
+        reasoning: str | None,
+        error: str | None,
+        tool_calls: list[ToolCallRecord],
+        turns: int,
+        total_latency_ms: float,
+        total_input_tokens: int,
+        total_output_tokens: int,
+    ) -> ToolUseRoutingResult:
+        return ToolUseRoutingResult(
+            next_state=next_state,
+            applied_rules=applied_rules,
+            flags=flags,
+            reasoning=reasoning,
+            error=error,
+            tool_calls=tuple(tool_calls),
+            turns=turns,
+            total_latency_ms=total_latency_ms,
+            total_input_tokens=total_input_tokens,
+            total_output_tokens=total_output_tokens,
+            model_id=self._adapter.model_id,
+        )
+
+    def predict_routing_with_tools(
+        self,
+        order: Order,
+        slides: list[Slide],
+        event: Event,
+        executor: ToolExecutor,
+        tool_defs: list[dict[str, Any]],
+        *,
+        prompt_extras: frozenset[str] = frozenset(),
+    ) -> ToolUseRoutingResult:
+        """Run tool-assisted routing prediction.
+
+        Multi-turn loop: the model calls tools for deterministic checks,
+        the engine executes them and feeds results back, until the model
+        produces a final JSON routing answer.
+
+        Args:
+            order: Current order state.
+            slides: All slides for this order.
+            event: The triggering event.
+            executor: ToolExecutor for running tool calls.
+            tool_defs: Routing tool definitions in OpenAI format.
+            prompt_extras: Prompt extras (skills, etc.).
+
+        Returns:
+            A ``ToolUseRoutingResult`` with routing fields + tool audit trail.
+        """
+        ctx = f"(order={order.order_id}, model={self.model_id})"
+
+        try:
+            renderer = (
+                render_routing_tool_lite_messages
+                if "routing_tools_lite" in prompt_extras
+                else render_routing_tool_messages
+            )
+            system_msg, user_msg = renderer(
+                order,
+                slides,
+                event,
+                prompt_extras=prompt_extras,
+            )
+        except Exception as exc:
+            error_msg = f"prompt_error: {type(exc).__name__}: {exc}"
+            return self._routing_tool_result(
+                next_state=None,
+                applied_rules=(),
+                flags=(),
+                reasoning=None,
+                error=f"{error_msg} {ctx}",
+                tool_calls=[],
+                turns=0,
+                total_latency_ms=0,
+                total_input_tokens=0,
+                total_output_tokens=0,
+            )
+
+        # Build allowed tool name set for validation (security: prevent
+        # text-parsed tool calls from bypassing tool_defs scope).
+        allowed_tools = {
+            td["function"]["name"]
+            for td in tool_defs
+            if "function" in td and "name" in td["function"]
+        }
+
+        messages: list[ChatMessage] = [system_msg, user_msg]
+        all_tool_calls: list[ToolCallRecord] = []
+        total_latency_ms: float = 0
+        total_input_tokens = 0
+        total_output_tokens = 0
+
+        for turn in range(1, self._MAX_ROUTING_TOOL_TURNS + 1):
+            try:
+                response: ChatResponse = self._adapter.chat(messages, tools=tool_defs)
+            except Exception as exc:
+                error_msg = f"adapter_error: {type(exc).__name__}: {exc}"
+                return self._routing_tool_result(
+                    next_state=None,
+                    applied_rules=(),
+                    flags=(),
+                    reasoning=None,
+                    error=f"{error_msg} {ctx}",
+                    tool_calls=all_tool_calls,
+                    turns=turn,
+                    total_latency_ms=total_latency_ms,
+                    total_input_tokens=total_input_tokens,
+                    total_output_tokens=total_output_tokens,
+                )
+
+            total_latency_ms += response.latency_ms
+            total_input_tokens += response.input_tokens
+            total_output_tokens += response.output_tokens
+
+            if response.error is not None:
+                return self._routing_tool_result(
+                    next_state=None,
+                    applied_rules=(),
+                    flags=(),
+                    reasoning=None,
+                    error=f"model_error: {response.error} {ctx}",
+                    tool_calls=all_tool_calls,
+                    turns=turn,
+                    total_latency_ms=total_latency_ms,
+                    total_input_tokens=total_input_tokens,
+                    total_output_tokens=total_output_tokens,
+                )
+
+            msg = response.message
+
+            # Model returned tool calls — validate, execute, and continue
+            if msg.tool_calls:
+                messages.append(msg)
+                for tc in msg.tool_calls:
+                    if tc.function_name not in allowed_tools:
+                        logger.warning(
+                            "Tool %r not in allowed set %s %s",
+                            tc.function_name,
+                            sorted(allowed_tools),
+                            ctx,
+                        )
+                        result_str = json.dumps({"error": f"Unknown tool: {tc.function_name}"})
+                    else:
+                        try:
+                            result_str = executor.execute(tc.function_name, tc.arguments)
+                        except Exception as exc:
+                            error_msg = f"executor_error: {type(exc).__name__}: {exc}"
+                            logger.warning("Tool execution failed: %s %s", error_msg, ctx)
+                            return self._routing_tool_result(
+                                next_state=None,
+                                applied_rules=(),
+                                flags=(),
+                                reasoning=None,
+                                error=f"{error_msg} {ctx}",
+                                tool_calls=all_tool_calls,
+                                turns=turn,
+                                total_latency_ms=total_latency_ms,
+                                total_input_tokens=total_input_tokens,
+                                total_output_tokens=total_output_tokens,
+                            )
+                    all_tool_calls.append(
+                        ToolCallRecord(
+                            tool_name=tc.function_name,
+                            arguments=tc.arguments,
+                            result=result_str,
+                            turn=turn,
+                        )
+                    )
+                    messages.append(
+                        ChatMessage(
+                            role=ChatRole.TOOL,
+                            content=result_str,
+                            tool_call_id=tc.id,
+                        )
+                    )
+                continue
+
+            # Model returned text — parse as routing JSON
+            if msg.content is not None:
+                parsed, error = parse_model_output(msg.content)
+                if parsed is None:
+                    return self._routing_tool_result(
+                        next_state=None,
+                        applied_rules=(),
+                        flags=(),
+                        reasoning=None,
+                        error=f"{error} {ctx}",
+                        tool_calls=all_tool_calls,
+                        turns=turn,
+                        total_latency_ms=total_latency_ms,
+                        total_input_tokens=total_input_tokens,
+                        total_output_tokens=total_output_tokens,
+                    )
+                return self._routing_tool_result(
+                    next_state=parsed["next_state"],
+                    applied_rules=tuple(parsed["applied_rules"]),
+                    flags=tuple(parsed["flags"]),
+                    reasoning=parsed["reasoning"],
+                    error=None,
+                    tool_calls=all_tool_calls,
+                    turns=turn,
+                    total_latency_ms=total_latency_ms,
+                    total_input_tokens=total_input_tokens,
+                    total_output_tokens=total_output_tokens,
+                )
+
+            # Neither — empty response
+            return self._routing_tool_result(
+                next_state=None,
+                applied_rules=(),
+                flags=(),
+                reasoning=None,
+                error=f"empty_response: no content or tool calls {ctx}",
+                tool_calls=all_tool_calls,
+                turns=turn,
+                total_latency_ms=total_latency_ms,
+                total_input_tokens=total_input_tokens,
+                total_output_tokens=total_output_tokens,
+            )
+
+        # Max turns exceeded
+        logger.warning(
+            "Routing tool-use loop reached %d turns %s",
+            self._MAX_ROUTING_TOOL_TURNS,
+            ctx,
+        )
+        return self._routing_tool_result(
+            next_state=None,
+            applied_rules=(),
+            flags=(),
+            reasoning=None,
+            error=f"max_turns_exceeded: {self._MAX_ROUTING_TOOL_TURNS} turns {ctx}",
+            tool_calls=all_tool_calls,
+            turns=self._MAX_ROUTING_TOOL_TURNS,
             total_latency_ms=total_latency_ms,
             total_input_tokens=total_input_tokens,
             total_output_tokens=total_output_tokens,

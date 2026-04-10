@@ -1,0 +1,902 @@
+{
+  "summary": {
+    "total_steps": 111,
+    "deterministic": 105,
+    "judgment": 6,
+    "deterministic_pct": 94.6,
+    "judgment_pct": 5.4,
+    "screening_scenarios": 33,
+    "judgment_rules": [
+      "HE-005",
+      "HE-006",
+      "HE-007",
+      "HE-008",
+      "HE-009",
+      "IHC-008",
+      "IHC-009"
+    ]
+  },
+  "steps": {
+    "SC-003-S1": {
+      "scenario_id": "SC-003",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-001"
+      ]
+    },
+    "SC-005-S1": {
+      "scenario_id": "SC-005",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-002"
+      ]
+    },
+    "SC-006-S1": {
+      "scenario_id": "SC-006",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-001",
+        "ACC-002"
+      ]
+    },
+    "SC-009-S1": {
+      "scenario_id": "SC-009",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-004"
+      ]
+    },
+    "SC-010-S1": {
+      "scenario_id": "SC-010",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-004",
+        "ACC-005"
+      ]
+    },
+    "SC-011-S1": {
+      "scenario_id": "SC-011",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-005"
+      ]
+    },
+    "SC-012-S1": {
+      "scenario_id": "SC-012",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-005"
+      ]
+    },
+    "SC-013-S1": {
+      "scenario_id": "SC-013",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-006"
+      ]
+    },
+    "SC-014-S1": {
+      "scenario_id": "SC-014",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-006"
+      ]
+    },
+    "SC-016-S1": {
+      "scenario_id": "SC-016",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-007"
+      ]
+    },
+    "SC-019-S1": {
+      "scenario_id": "SC-019",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-019-S2": {
+      "scenario_id": "SC-019",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-019-S3": {
+      "scenario_id": "SC-019",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-002"
+      ]
+    },
+    "SC-020-S1": {
+      "scenario_id": "SC-020",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-020-S2": {
+      "scenario_id": "SC-020",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-020-S3": {
+      "scenario_id": "SC-020",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-020-S4": {
+      "scenario_id": "SC-020",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-020-S5": {
+      "scenario_id": "SC-020",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-002"
+      ]
+    },
+    "SC-024-S1": {
+      "scenario_id": "SC-024",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-024-S2": {
+      "scenario_id": "SC-024",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-024-S3": {
+      "scenario_id": "SC-024",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-002"
+      ]
+    },
+    "SC-024-S4": {
+      "scenario_id": "SC-024",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-024-S5": {
+      "scenario_id": "SC-024",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-024-S6": {
+      "scenario_id": "SC-024",
+      "step": 6,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-024-S7": {
+      "scenario_id": "SC-024",
+      "step": 7,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-004"
+      ]
+    },
+    "SC-026-S1": {
+      "scenario_id": "SC-026",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-026-S2": {
+      "scenario_id": "SC-026",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-026-S3": {
+      "scenario_id": "SC-026",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-026-S4": {
+      "scenario_id": "SC-026",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-026-S5": {
+      "scenario_id": "SC-026",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-026-S6": {
+      "scenario_id": "SC-026",
+      "step": 6,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-005"
+      ]
+    },
+    "SC-026-S7": {
+      "scenario_id": "SC-026",
+      "step": 7,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-026-S8": {
+      "scenario_id": "SC-026",
+      "step": 8,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-005"
+      ]
+    },
+    "SC-028-S1": {
+      "scenario_id": "SC-028",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-028-S2": {
+      "scenario_id": "SC-028",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-028-S3": {
+      "scenario_id": "SC-028",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-028-S4": {
+      "scenario_id": "SC-028",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-028-S5": {
+      "scenario_id": "SC-028",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-002"
+      ]
+    },
+    "SC-028-S6": {
+      "scenario_id": "SC-028",
+      "step": 6,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-028-S7": {
+      "scenario_id": "SC-028",
+      "step": 7,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-006"
+      ]
+    },
+    "SC-038-S1": {
+      "scenario_id": "SC-038",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-038-S2": {
+      "scenario_id": "SC-038",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-038-S3": {
+      "scenario_id": "SC-038",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-038-S4": {
+      "scenario_id": "SC-038",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-038-S5": {
+      "scenario_id": "SC-038",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-038-S6": {
+      "scenario_id": "SC-038",
+      "step": 6,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-004"
+      ]
+    },
+    "SC-038-S7": {
+      "scenario_id": "SC-038",
+      "step": 7,
+      "classification": "deterministic",
+      "expected_rules": []
+    },
+    "SC-038-S8": {
+      "scenario_id": "SC-038",
+      "step": 8,
+      "classification": "deterministic",
+      "expected_rules": [
+        "HE-001"
+      ]
+    },
+    "SC-038-S9": {
+      "scenario_id": "SC-038",
+      "step": 9,
+      "classification": "judgment",
+      "expected_rules": [
+        "HE-005"
+      ]
+    },
+    "SC-045-S1": {
+      "scenario_id": "SC-045",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-045-S2": {
+      "scenario_id": "SC-045",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-045-S3": {
+      "scenario_id": "SC-045",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-045-S4": {
+      "scenario_id": "SC-045",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-045-S5": {
+      "scenario_id": "SC-045",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-045-S6": {
+      "scenario_id": "SC-045",
+      "step": 6,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-004"
+      ]
+    },
+    "SC-045-S7": {
+      "scenario_id": "SC-045",
+      "step": 7,
+      "classification": "deterministic",
+      "expected_rules": []
+    },
+    "SC-045-S8": {
+      "scenario_id": "SC-045",
+      "step": 8,
+      "classification": "deterministic",
+      "expected_rules": [
+        "HE-001"
+      ]
+    },
+    "SC-045-S9": {
+      "scenario_id": "SC-045",
+      "step": 9,
+      "classification": "judgment",
+      "expected_rules": [
+        "HE-008"
+      ]
+    },
+    "SC-081-S1": {
+      "scenario_id": "SC-081",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-001",
+        "ACC-006"
+      ]
+    },
+    "SC-082-S1": {
+      "scenario_id": "SC-082",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-001",
+        "ACC-002",
+        "ACC-003",
+        "ACC-006",
+        "ACC-007"
+      ]
+    },
+    "SC-087-S1": {
+      "scenario_id": "SC-087",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-087-S2": {
+      "scenario_id": "SC-087",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-087-S3": {
+      "scenario_id": "SC-087",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-087-S4": {
+      "scenario_id": "SC-087",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-087-S5": {
+      "scenario_id": "SC-087",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-087-S6": {
+      "scenario_id": "SC-087",
+      "step": 6,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-004"
+      ]
+    },
+    "SC-087-S7": {
+      "scenario_id": "SC-087",
+      "step": 7,
+      "classification": "deterministic",
+      "expected_rules": []
+    },
+    "SC-087-S8": {
+      "scenario_id": "SC-087",
+      "step": 8,
+      "classification": "deterministic",
+      "expected_rules": [
+        "HE-001"
+      ]
+    },
+    "SC-087-S9": {
+      "scenario_id": "SC-087",
+      "step": 9,
+      "classification": "judgment",
+      "expected_rules": [
+        "HE-008"
+      ]
+    },
+    "SC-088-S1": {
+      "scenario_id": "SC-088",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-088-S2": {
+      "scenario_id": "SC-088",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-100-S1": {
+      "scenario_id": "SC-100",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-004"
+      ]
+    },
+    "SC-101-S1": {
+      "scenario_id": "SC-101",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-004"
+      ]
+    },
+    "SC-102-S1": {
+      "scenario_id": "SC-102",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-003"
+      ]
+    },
+    "SC-103-S1": {
+      "scenario_id": "SC-103",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-009"
+      ]
+    },
+    "SC-106-S1": {
+      "scenario_id": "SC-106",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-107-S1": {
+      "scenario_id": "SC-107",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-108-S1": {
+      "scenario_id": "SC-108",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-109-S1": {
+      "scenario_id": "SC-109",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-109-S2": {
+      "scenario_id": "SC-109",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-109-S3": {
+      "scenario_id": "SC-109",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-109-S4": {
+      "scenario_id": "SC-109",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-109-S5": {
+      "scenario_id": "SC-109",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-109-S6": {
+      "scenario_id": "SC-109",
+      "step": 6,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-004"
+      ]
+    },
+    "SC-109-S7": {
+      "scenario_id": "SC-109",
+      "step": 7,
+      "classification": "deterministic",
+      "expected_rules": []
+    },
+    "SC-109-S8": {
+      "scenario_id": "SC-109",
+      "step": 8,
+      "classification": "deterministic",
+      "expected_rules": [
+        "HE-001"
+      ]
+    },
+    "SC-109-S9": {
+      "scenario_id": "SC-109",
+      "step": 9,
+      "classification": "judgment",
+      "expected_rules": [
+        "HE-007"
+      ]
+    },
+    "SC-110-S1": {
+      "scenario_id": "SC-110",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-110-S2": {
+      "scenario_id": "SC-110",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-110-S3": {
+      "scenario_id": "SC-110",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-110-S4": {
+      "scenario_id": "SC-110",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-110-S5": {
+      "scenario_id": "SC-110",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-110-S6": {
+      "scenario_id": "SC-110",
+      "step": 6,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-004"
+      ]
+    },
+    "SC-110-S7": {
+      "scenario_id": "SC-110",
+      "step": 7,
+      "classification": "deterministic",
+      "expected_rules": []
+    },
+    "SC-110-S8": {
+      "scenario_id": "SC-110",
+      "step": 8,
+      "classification": "deterministic",
+      "expected_rules": [
+        "HE-001"
+      ]
+    },
+    "SC-110-S9": {
+      "scenario_id": "SC-110",
+      "step": 9,
+      "classification": "judgment",
+      "expected_rules": [
+        "HE-005"
+      ]
+    },
+    "SC-110-S10": {
+      "scenario_id": "SC-110",
+      "step": 10,
+      "classification": "deterministic",
+      "expected_rules": []
+    },
+    "SC-110-S11": {
+      "scenario_id": "SC-110",
+      "step": 11,
+      "classification": "deterministic",
+      "expected_rules": [
+        "IHC-002"
+      ]
+    },
+    "SC-110-S12": {
+      "scenario_id": "SC-110",
+      "step": 12,
+      "classification": "deterministic",
+      "expected_rules": [
+        "IHC-006"
+      ]
+    },
+    "SC-111-S1": {
+      "scenario_id": "SC-111",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-111-S2": {
+      "scenario_id": "SC-111",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-111-S3": {
+      "scenario_id": "SC-111",
+      "step": 3,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-111-S4": {
+      "scenario_id": "SC-111",
+      "step": 4,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-111-S5": {
+      "scenario_id": "SC-111",
+      "step": 5,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-111-S6": {
+      "scenario_id": "SC-111",
+      "step": 6,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-004"
+      ]
+    },
+    "SC-111-S7": {
+      "scenario_id": "SC-111",
+      "step": 7,
+      "classification": "deterministic",
+      "expected_rules": []
+    },
+    "SC-111-S8": {
+      "scenario_id": "SC-111",
+      "step": 8,
+      "classification": "deterministic",
+      "expected_rules": [
+        "HE-001"
+      ]
+    },
+    "SC-111-S9": {
+      "scenario_id": "SC-111",
+      "step": 9,
+      "classification": "judgment",
+      "expected_rules": [
+        "HE-008"
+      ]
+    },
+    "SC-112-S1": {
+      "scenario_id": "SC-112",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    },
+    "SC-112-S2": {
+      "scenario_id": "SC-112",
+      "step": 2,
+      "classification": "deterministic",
+      "expected_rules": [
+        "SP-001"
+      ]
+    },
+    "SC-113-S1": {
+      "scenario_id": "SC-113",
+      "step": 1,
+      "classification": "deterministic",
+      "expected_rules": [
+        "ACC-008"
+      ]
+    }
+  }
+}

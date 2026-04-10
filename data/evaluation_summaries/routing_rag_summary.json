@@ -1,0 +1,274 @@
+{
+  "timestamps": {
+    "started_at": "2026-03-10T11:45:02.505630",
+    "completed_at": "2026-03-10T18:38:07.622358"
+  },
+  "models": [
+    {
+      "model_id": "claude-opus-4-6-20250514",
+      "accuracy": 91.57641395908543,
+      "accuracy_by_category": {
+        "accumulated_state": 89.28571428571429,
+        "multi_rule": 91.42857142857143,
+        "rule_coverage": 92.3076923076923,
+        "unknown_input": 66.66666666666666
+      },
+      "rule_accuracy": 52.34657039711191,
+      "flag_accuracy": 90.97472924187726,
+      "false_positive_rate": 3.1287605294825513,
+      "scenario_reliability": 0.0,
+      "accuracy_std": null,
+      "rule_accuracy_std": null,
+      "flag_accuracy_std": null,
+      "latency_mean_ms": 8423.809867629363,
+      "latency_p50_ms": 6041.0,
+      "latency_p95_ms": 20646.0,
+      "token_input_mean": 3338.5270758122742,
+      "token_output_mean": 168.6979542719615,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "wrong_rules": 309,
+        "hallucinated_rule": 32,
+        "wrong_state": 61,
+        "wrong_flags": 40
+      }
+    },
+    {
+      "model_id": "claude-sonnet-4-6-20250514",
+      "accuracy": 88.32731648616125,
+      "accuracy_by_category": {
+        "accumulated_state": 83.57142857142857,
+        "multi_rule": 94.28571428571428,
+        "rule_coverage": 89.07692307692308,
+        "unknown_input": 83.33333333333334
+      },
+      "rule_accuracy": 37.545126353790614,
+      "flag_accuracy": 86.8832731648616,
+      "false_positive_rate": 1.9253910950661854,
+      "scenario_reliability": 0.0,
+      "accuracy_std": null,
+      "rule_accuracy_std": null,
+      "flag_accuracy_std": null,
+      "latency_mean_ms": 4584.111913357401,
+      "latency_p50_ms": 4262.0,
+      "latency_p95_ms": 6826.5,
+      "token_input_mean": 3338.5270758122742,
+      "token_output_mean": 174.51263537906138,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "wrong_rules": 378,
+        "hallucinated_rule": 67,
+        "wrong_state": 74,
+        "wrong_flags": 38,
+        "invalid_json": 3
+      }
+    },
+    {
+      "model_id": "qwen/qwen3-8b",
+      "accuracy": 82.52707581227436,
+      "accuracy_by_category": {
+        "accumulated_state": 82.57142857142857,
+        "multi_rule": 82.28571428571428,
+        "rule_coverage": 83.13846153846154,
+        "unknown_input": 16.666666666666664
+      },
+      "rule_accuracy": 43.85078219013237,
+      "flag_accuracy": 88.92900120336944,
+      "false_positive_rate": 1.2515042117930204,
+      "scenario_reliability": 0.0,
+      "accuracy_std": 0.9901324876401515,
+      "rule_accuracy_std": 0.2345798879617079,
+      "flag_accuracy_std": 0.26908158574004704,
+      "latency_mean_ms": 2449.214199759326,
+      "latency_p50_ms": 2326.0,
+      "latency_p95_ms": 3656.3,
+      "token_input_mean": 3009.111432009627,
+      "token_output_mean": 87.64548736462093,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "hallucinated_rule": 569,
+        "wrong_rules": 1543,
+        "wrong_state": 508,
+        "invalid_json": 1,
+        "wrong_flags": 186
+      }
+    },
+    {
+      "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+      "accuracy": 78.45968712394705,
+      "accuracy_by_category": {
+        "accumulated_state": 77.57142857142857,
+        "multi_rule": 75.42857142857143,
+        "rule_coverage": 79.23076923076923,
+        "unknown_input": 33.33333333333333
+      },
+      "rule_accuracy": 52.73164861612515,
+      "flag_accuracy": 86.06498194945848,
+      "false_positive_rate": 1.1070998796630565,
+      "scenario_reliability": 0.0,
+      "accuracy_std": 0.7068195020740557,
+      "rule_accuracy_std": 1.152347977845882,
+      "flag_accuracy_std": 0.3114844550070927,
+      "latency_mean_ms": 4223.809626955475,
+      "latency_p50_ms": 2017.0,
+      "latency_p95_ms": 10706.100000000002,
+      "token_input_mean": 3154.8274368231046,
+      "token_output_mean": 100.36967509025271,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "wrong_rules": 1258,
+        "wrong_state": 865,
+        "hallucinated_rule": 111,
+        "wrong_flags": 205
+      }
+    },
+    {
+      "model_id": "qwen/qwen3.5-35b-a3b",
+      "accuracy": 78.2430806257521,
+      "accuracy_by_category": {
+        "accumulated_state": 73.28571428571429,
+        "multi_rule": 85.71428571428571,
+        "rule_coverage": 79.32307692307691,
+        "unknown_input": 33.33333333333333
+      },
+      "rule_accuracy": 44.23586040914561,
+      "flag_accuracy": 83.27316486161251,
+      "false_positive_rate": 2.454873646209386,
+      "scenario_reliability": 0.0,
+      "accuracy_std": 0.738872752491395,
+      "rule_accuracy_std": 0.2770364484529808,
+      "flag_accuracy_std": 0.5034055514645458,
+      "latency_mean_ms": 2301.6601684717207,
+      "latency_p50_ms": 1681.0,
+      "latency_p95_ms": 6697.000000000002,
+      "token_input_mean": 3164.4726835138385,
+      "token_output_mean": 174.4734055354994,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "hallucinated_rule": 489,
+        "wrong_rules": 1496,
+        "wrong_state": 672,
+        "invalid_json": 154,
+        "wrong_flags": 152
+      }
+    },
+    {
+      "model_id": "claude-haiku-4-5-20251001",
+      "accuracy": 68.47172081829122,
+      "accuracy_by_category": {
+        "accumulated_state": 65.71428571428571,
+        "multi_rule": 71.42857142857143,
+        "rule_coverage": 69.53846153846153,
+        "unknown_input": 0.0
+      },
+      "rule_accuracy": 36.22141997593261,
+      "flag_accuracy": 91.81708784596871,
+      "false_positive_rate": 0.7220216606498195,
+      "scenario_reliability": 0.0,
+      "accuracy_std": null,
+      "rule_accuracy_std": null,
+      "flag_accuracy_std": null,
+      "latency_mean_ms": 3316.2755716004813,
+      "latency_p50_ms": 2991.0,
+      "latency_p95_ms": 5207.5,
+      "token_input_mean": 3314.719614921781,
+      "token_output_mean": 171.79061371841155,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "wrong_state": 115,
+        "hallucinated_rule": 246,
+        "wrong_rules": 199,
+        "wrong_flags": 29
+      }
+    },
+    {
+      "model_id": "google/gemma-3-27b-it",
+      "accuracy": 65.12635379061372,
+      "accuracy_by_category": {
+        "accumulated_state": 67.85714285714286,
+        "multi_rule": 62.28571428571429,
+        "rule_coverage": 65.16923076923077,
+        "unknown_input": 13.333333333333334
+      },
+      "rule_accuracy": 45.824308062575206,
+      "flag_accuracy": 83.89891696750902,
+      "false_positive_rate": 0.529482551143201,
+      "scenario_reliability": 0.0,
+      "accuracy_std": 4.894327026738579,
+      "rule_accuracy_std": 3.4284415455124733,
+      "flag_accuracy_std": 6.5478116465214296,
+      "latency_mean_ms": 3340.7018050541515,
+      "latency_p50_ms": 2973.0,
+      "latency_p95_ms": 6116.500000000005,
+      "token_input_mean": 3187.53285198556,
+      "token_output_mean": 85.12851985559567,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "hallucinated_rule": 688,
+        "wrong_state": 761,
+        "invalid_json": 133,
+        "wrong_rules": 1253,
+        "wrong_flags": 140,
+        "hallucinated_state": 8
+      }
+    },
+    {
+      "model_id": "microsoft/phi-4",
+      "accuracy": 61.15523465703971,
+      "accuracy_by_category": {
+        "accumulated_state": 63.857142857142854,
+        "multi_rule": 54.285714285714285,
+        "rule_coverage": 61.23076923076923,
+        "unknown_input": 30.0
+      },
+      "rule_accuracy": 33.525872442839955,
+      "flag_accuracy": 83.29723225030085,
+      "false_positive_rate": 2.6714801444043323,
+      "scenario_reliability": 0.0,
+      "accuracy_std": 1.1679504749507532,
+      "rule_accuracy_std": 0.39546755054524413,
+      "flag_accuracy_std": 0.9180375991701848,
+      "latency_mean_ms": 5960.806016847172,
+      "latency_p50_ms": 6426.0,
+      "latency_p95_ms": 9966.2,
+      "token_input_mean": 2789.5913357400723,
+      "token_output_mean": 314.7935018050542,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "hallucinated_rule": 1029,
+        "wrong_state": 950,
+        "hallucinated_state": 72,
+        "wrong_rules": 976,
+        "invalid_json": 20,
+        "wrong_flags": 122,
+        "hallucinated_flag": 8
+      }
+    },
+    {
+      "model_id": "qwen/qwen3-32b",
+      "accuracy": 29.411764705882355,
+      "accuracy_by_category": {
+        "rule_coverage": 29.411764705882355
+      },
+      "rule_accuracy": 8.823529411764707,
+      "flag_accuracy": 58.82352941176471,
+      "false_positive_rate": 5.88235294117647,
+      "scenario_reliability": 0.0,
+      "accuracy_std": null,
+      "rule_accuracy_std": null,
+      "flag_accuracy_std": null,
+      "latency_mean_ms": 25736.352941176472,
+      "latency_p50_ms": 18769.5,
+      "latency_p95_ms": 78578.20000000001,
+      "token_input_mean": 2659.529411764706,
+      "token_output_mean": 607.2647058823529,
+      "total_cost_usd": null,
+      "failure_counts": {
+        "invalid_json": 11,
+        "wrong_state": 7,
+        "wrong_rules": 3,
+        "hallucinated_rule": 10
+      }
+    }
+  ]
+}
